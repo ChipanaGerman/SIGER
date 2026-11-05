@@ -2,7 +2,7 @@
 
 > **Trabajo Final — Tecnología de Objetos**  
 > **Universidad Nacional de San Agustín de Arequipa (UNSA)**  
-> **Escuela Profesional de Ciencia de la Computación**
+> **Escuela Profesional de Ingeniería de Sistemas**
 
 ---
 
