@@ -9,13 +9,38 @@ Pedido::Pedido(const std::string& id,
                std::shared_ptr<Paquete> paquete,
                const std::string& origen,
                const std::string& destino,
-               double distanciaKm)
+               double distanciaKm,
+               const std::string& tipoVehiculo)
     : m_id(id)
     , m_paquete(std::move(paquete))
     , m_origen(origen)
     , m_destino(destino)
     , m_distanciaKm(distanciaKm)
+    , m_tipoVehiculoRequerido(tipoVehiculo)
 {}
+
+std::string Pedido::getTipoVehiculoRequerido() const {
+    if (!m_tipoVehiculoRequerido.empty()) {
+        return m_tipoVehiculoRequerido;
+    }
+    double peso = m_paquete ? m_paquete->getPesoKg() : 1.0;
+    if (peso <= 15.0) return "Moto";
+    if (peso <= 100.0) return "Auto";
+    return "Camion";
+}
+
+bool Pedido::esCompatibleCon(const std::string& tipoVehiculo, double capacidadKg) const {
+    double peso = m_paquete ? m_paquete->getPesoKg() : 0.0;
+    if (peso > capacidadKg) {
+        return false;
+    }
+    // Si se exigió un vehículo específico (desde GUI), debe coincidir exactamente
+    if (!m_tipoVehiculoRequerido.empty()) {
+        return m_tipoVehiculoRequerido == tipoVehiculo;
+    }
+    // Si no se exigió explícitamente (tests unitarios), cualquier vehículo con capacidad basta
+    return true;
+}
 
 std::string Pedido::getEstadoStr() const {
     switch (m_estado) {

@@ -108,6 +108,52 @@ public:
         }
     }
 
+    /**
+     * @brief Extrae el primer elemento que cumpla con el predicado dado.
+     * Conserva el orden estricto de todos los demás elementos.
+     * @tparam Predicate Functor o lambda bool(const T&).
+     * @param pred Condición que debe cumplir el elemento a extraer.
+     * @return std::optional<T> con el elemento hallado, o std::nullopt.
+     */
+    template <typename Predicate>
+    [[nodiscard]] std::optional<T> extraerSi(Predicate pred) {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        std::queue<T> nuevaCola;
+        std::optional<T> resultado = std::nullopt;
+
+        while (!m_queue.empty()) {
+            T elem = std::move(m_queue.front());
+            m_queue.pop();
+
+            if (!resultado.has_value() && pred(elem)) {
+                resultado = std::move(elem);
+            } else {
+                nuevaCola.push(std::move(elem));
+            }
+        }
+        m_queue = std::move(nuevaCola);
+        return resultado;
+    }
+
+    /**
+     * @brief Comprueba si existe al menos un elemento que cumpla con el predicado.
+     * @tparam Predicate Functor o lambda bool(const T&).
+     * @param pred Condición a evaluar.
+     * @return true si se encontró al menos un elemento que cumple el predicado.
+     */
+    template <typename Predicate>
+    [[nodiscard]] bool contieneSi(Predicate pred) const {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        std::queue<T> copia = m_queue;
+        while (!copia.empty()) {
+            if (pred(copia.front())) {
+                return true;
+            }
+            copia.pop();
+        }
+        return false;
+    }
+
 private:
     mutable std::mutex  m_mutex; ///< Mutex para proteger el acceso concurrente.
     std::queue<T>       m_queue; ///< Contenedor interno de elementos.

@@ -24,7 +24,8 @@ public:
            std::shared_ptr<Paquete> paquete,
            const std::string& origen,
            const std::string& destino,
-           double distanciaKm);
+           double distanciaKm,
+           const std::string& tipoVehiculo = "");
 
     // ── Getters ──────────────────────────────────────────────────────
     const std::string&            getId()          const { return m_id; }
@@ -34,6 +35,10 @@ public:
     double                        getDistanciaKm() const { return m_distanciaKm; }
     EstadoPedido                  getEstado()      const { return m_estado; }
     const std::string&            getRepartidorId() const { return m_repartidorId; }
+    std::string                   getTipoVehiculoRequerido() const;
+
+    // ── Verificación de compatibilidad ───────────────────────────────
+    bool esCompatibleCon(const std::string& tipoVehiculo, double capacidadKg) const;
 
     // ── Setters ──────────────────────────────────────────────────────
     void setEstado(EstadoPedido estado)         { m_estado = estado; }
@@ -50,6 +55,7 @@ private:
     double                   m_distanciaKm;
     EstadoPedido             m_estado { EstadoPedido::NUEVO };
     std::string              m_repartidorId;
+    std::string              m_tipoVehiculoRequerido;
 };
 
 } // namespace siger

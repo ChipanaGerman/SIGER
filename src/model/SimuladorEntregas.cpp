@@ -52,6 +52,7 @@ void SimuladorEntregas::iniciar() {
     m_totalEntregados.store(0);
     m_totalFallidos.store(0);
     m_enCamino.store(0);
+    m_ultimoDespacho = std::chrono::steady_clock::time_point{};
 
     {
         std::lock_guard<std::mutex> lock(m_mutex);
@@ -84,19 +85,25 @@ void SimuladorEntregas::detener() {
     m_pausado.store(false);
     m_condVar.notify_all();
 
-    std::lock_guard<std::mutex> lock(m_mutex);
-    for (auto& hilo : m_hilos) {
+    std::vector<std::thread> hilosLocales;
+    {
+        std::lock_guard<std::mutex> lock(m_mutex);
+        hilosLocales = std::move(m_hilos);
+        m_hilos.clear();
+    }
+
+    // Unirse a los hilos FUERA del lock para evitar cualquier deadlock
+    for (auto& hilo : hilosLocales) {
         if (hilo.joinable()) {
             hilo.join();
         }
     }
-    m_hilos.clear();
 
     notificarObservers(EventoSiger::SIMULACION_DETENIDA, "", "Simulación detenida");
 }
 
 void SimuladorEntregas::setVelocidad(int ms) {
-    m_velocidadSimulacion = std::max(100, ms);
+    m_velocidadSimulacion = std::max(1, ms);
 }
 
 bool SimuladorEntregas::isCorriendo() const {
@@ -112,23 +119,44 @@ EstadisticasSimulacion SimuladorEntregas::getEstadisticas() const {
 }
 
 void SimuladorEntregas::hiloRepartidor(std::shared_ptr<Repartidor> rep) {
+    if (!rep || !rep->getVehiculo()) return;
+    const std::string tipoVehiculo = rep->getVehiculo()->getTipo();
+    const double capVehiculo       = rep->getVehiculo()->getCapacidadKg();
+
     while (m_corriendo.load()) {
         std::shared_ptr<Pedido> pedido;
 
-        // Esperar un pedido disponible
+        // Esperar un pedido disponible compatible con el vehículo de este repartidor
         {
             std::unique_lock<std::mutex> lock(m_mutex);
 
-            m_condVar.wait_for(lock, std::chrono::milliseconds(200), [this] {
-                return !m_corriendo.load()
-                    || (!m_pausado.load() && !m_colaPedidos->isEmpty());
+            m_condVar.wait_for(lock, std::chrono::milliseconds(200), [this, &tipoVehiculo, capVehiculo] {
+                if (!m_corriendo.load()) return true;
+                if (m_pausado.load() || m_colaPedidos->isEmpty()) return false;
+
+                // Solo despertar si hay un pedido en cola que este vehículo pueda atender
+                return m_colaPedidos->contieneSi([&tipoVehiculo, capVehiculo](const std::shared_ptr<Pedido>& p) {
+                    if (!p || p->getEstado() == EstadoPedido::FALLIDO || p->getEstado() == EstadoPedido::COMPLETADO) {
+                        return false;
+                    }
+                    return p->esCompatibleCon(tipoVehiculo, capVehiculo);
+                });
             });
 
             if (!m_corriendo.load()) break;
             if (m_pausado.load() || m_colaPedidos->isEmpty()) continue;
 
-            auto optPedido = m_colaPedidos->pop();
+            // Extraer el primer pedido compatible con este vehículo
+            auto optPedido = m_colaPedidos->extraerSi([&tipoVehiculo, capVehiculo](const std::shared_ptr<Pedido>& p) {
+                if (!p || p->getEstado() == EstadoPedido::FALLIDO || p->getEstado() == EstadoPedido::COMPLETADO) {
+                    return false;
+                }
+                return p->esCompatibleCon(tipoVehiculo, capVehiculo);
+            });
+
             if (!optPedido.has_value()) {
+                // Ningún pedido en la cola es para este tipo de vehículo en este momento.
+                // El repartidor permanece en espera hasta que llegue uno o se despierte.
                 continue;
             }
             pedido = std::move(optPedido.value());
@@ -137,28 +165,46 @@ void SimuladorEntregas::hiloRepartidor(std::shared_ptr<Repartidor> rep) {
         if (!pedido) continue;
 
         try {
-            // 1. Marcar EN_CAMINO
+            // Escalonamiento de salidas para evitar que salgan todos al mismo instante
+            {
+                std::unique_lock<std::mutex> despLock(m_despachoMutex);
+                auto ahora = std::chrono::steady_clock::now();
+                auto transcurridoMs = std::chrono::duration_cast<std::chrono::milliseconds>(ahora - m_ultimoDespacho).count();
+                // A velocidad de prueba unitaria (ms < 100), no retardamos
+                int delayEscalon = (m_velocidadSimulacion < 100) ? 0 : 1200;
+                if (transcurridoMs < delayEscalon && m_ultimoDespacho.time_since_epoch().count() > 0) {
+                    int espera = delayEscalon - static_cast<int>(transcurridoMs);
+                    std::this_thread::sleep_for(std::chrono::milliseconds(espera));
+                }
+                m_ultimoDespacho = std::chrono::steady_clock::now();
+            }
+
+            // 1. Marcar EN_CAMINO y asociar al repartidor
             pedido->setEstado(EstadoPedido::EN_CAMINO);
             pedido->setRepartidorId(rep->getId());
+            rep->asignarPedido(pedido);
             ++m_enCamino;
 
             notificarObservers(EventoSiger::PEDIDO_EN_CAMINO,
                                pedido->getId(),
-                               "EN_CAMINO:" + pedido->getId() + ":" + rep->getId());
+                               "EN_CAMINO:" + pedido->getId() + ":" + rep->getId() + ":" + tipoVehiculo);
 
-            // 2. Simular el viaje con retardo reactivo
-            double velKmh = (rep && rep->getVehiculo()) ? rep->getVehiculo()->getVelocidadKmh() : 45.0;
-            double minutos = (pedido->getDistanciaKm() / velKmh) * 60.0;
-            // Escalar a milisegundos de animación (aprox 1 a 2.5 seg por viaje)
-            int duracionMs = std::max(600, static_cast<int>(minutos * (m_velocidadSimulacion / 6.0)));
+            // 2. Simular el viaje con velocidad pausada y realista
+            // Moto: ~5.5s, Auto: ~7.5s, Camión: ~10s (a velocidad base 1000)
+            int duracionBaseMs = (tipoVehiculo == "Moto") ? 5500 : ((tipoVehiculo == "Auto") ? 7500 : 10000);
+            double factorVelocidad = static_cast<double>(m_velocidadSimulacion) / 1000.0;
+            int duracionMs = (m_velocidadSimulacion < 100)
+                             ? 10
+                             : std::max(60, static_cast<int>(duracionBaseMs * factorVelocidad));
 
             int transcurrido = 0;
+            int paso = std::min(50, duracionMs);
             while (transcurrido < duracionMs && m_corriendo.load()) {
                 while (m_pausado.load() && m_corriendo.load()) {
                     std::this_thread::sleep_for(std::chrono::milliseconds(100));
                 }
-                std::this_thread::sleep_for(std::chrono::milliseconds(50));
-                transcurrido += 50;
+                std::this_thread::sleep_for(std::chrono::milliseconds(paso));
+                transcurrido += paso;
             }
 
             // 3. Comprobar si se canceló o detuvo durante el viaje
@@ -166,19 +212,21 @@ void SimuladorEntregas::hiloRepartidor(std::shared_ptr<Repartidor> rep) {
                 pedido->setEstado(EstadoPedido::FALLIDO);
                 --m_enCamino;
                 ++m_totalFallidos;
+                rep->completarPedidoActual();
                 notificarObservers(EventoSiger::PEDIDO_CANCELADO,
                                    pedido->getId(),
                                    "PEDIDO_FALLIDO:" + pedido->getId());
                 break;
             }
 
-            // 4. Marcar COMPLETADO
+            // 4. Marcar COMPLETADO y liberar al repartidor para su siguiente entrega
             pedido->setEstado(EstadoPedido::COMPLETADO);
             if (pedido->getPaquete()) {
                 pedido->getPaquete()->setEstado(EstadoPaquete::ENTREGADO);
             }
             --m_enCamino;
             ++m_totalEntregados;
+            rep->completarPedidoActual();
 
             notificarObservers(EventoSiger::PEDIDO_COMPLETADO,
                                pedido->getId(),
@@ -189,12 +237,15 @@ void SimuladorEntregas::hiloRepartidor(std::shared_ptr<Repartidor> rep) {
                 pedido->setEstado(EstadoPedido::FALLIDO);
                 --m_enCamino;
                 ++m_totalFallidos;
+                rep->completarPedidoActual();
                 notificarObservers(EventoSiger::PEDIDO_CANCELADO,
                                    pedido->getId(),
                                    "PEDIDO_FALLIDO:" + pedido->getId());
             }
         }
 
+        // Despertar a otros hilos repartidores: una unidad ha regresado
+        // y puede haber pedidos pendientes en espera de su tipo de vehículo
         m_condVar.notify_all();
     }
 }

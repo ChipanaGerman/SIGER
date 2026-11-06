@@ -10,6 +10,7 @@
 #include "Repartidor.h"
 
 #include <atomic>
+#include <chrono>
 #include <condition_variable>
 #include <memory>
 #include <mutex>
@@ -71,6 +72,9 @@ private:
     std::atomic<int>                               m_totalEntregados{ 0 };
     std::atomic<int>                               m_totalFallidos  { 0 };
     std::atomic<int>                               m_enCamino       { 0 };
+
+    std::mutex                                     m_despachoMutex;
+    std::chrono::steady_clock::time_point          m_ultimoDespacho;
 };
 
 } // namespace siger
