@@ -4,6 +4,7 @@
  */
 
 #include "SimulacionController.h"
+#include <thread>
 
 namespace siger {
 
@@ -24,6 +25,13 @@ void SimulacionController::onEvento(const DatoEvento& evento) {
         emit simulacionDetenida();
     } else if (evento.tipo == EventoSiger::PEDIDO_COMPLETADO) {
         emit entregaCompletada(QString::fromStdString(evento.idEntidad), "");
+    } else if (evento.tipo == EventoSiger::TODOS_COMPLETADOS) {
+        // Detener simulación automáticamente y notificar a la GUI
+        if (m_simulador && m_simulador->isCorriendo()) {
+            // Detenemos en hilo separado para no bloquear el observer
+            std::thread([sim = m_simulador]() { sim->detener(); }).detach();
+        }
+        emit todosCompletados();
     }
 
     if (m_simulador) {
@@ -36,9 +44,8 @@ void SimulacionController::slotIniciar() {
     if (m_simulador) {
         m_simulador->iniciar();
     }
-    if (m_generador) {
-        m_generador->iniciar();
-    }
+    // GeneradorEventos deshabilitado: solo se procesan los pedidos registrados manualmente.
+    // if (m_generador) { m_generador->iniciar(); }
 }
 
 void SimulacionController::slotPausar() {

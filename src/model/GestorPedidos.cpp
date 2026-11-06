@@ -60,6 +60,15 @@ bool GestorPedidos::cancelarPedido(const std::string& id) {
     ++m_pedidosCancelados;
 
     notificarObservers(EventoSiger::PEDIDO_CANCELADO, id, "Pedido cancelado: " + id);
+
+    // Verificar si todos los pedidos han finalizado (completados + cancelados)
+    int total      = static_cast<int>(m_repositorioPedidos.cantidad());
+    int completados = m_pedidosCompletados.load();
+    int cancelados  = m_pedidosCancelados.load();
+    if (total > 0 && (completados + cancelados) >= total) {
+        notificarObservers(EventoSiger::TODOS_COMPLETADOS, "",
+                           "Todos los pedidos han finalizado: " + std::to_string(completados) + " completados");
+    }
     return true;
 }
 
@@ -81,6 +90,15 @@ void GestorPedidos::marcarCompletado(const std::string& id) {
     pedido->setEstado(EstadoPedido::COMPLETADO);
     if (pedido->getPaquete()) {
         pedido->getPaquete()->setEstado(EstadoPaquete::ENTREGADO);
+    }
+
+    // Verificar si todos los pedidos registrados han finalizado
+    int total      = static_cast<int>(m_repositorioPedidos.cantidad());
+    int completados = m_pedidosCompletados.load();
+    int cancelados  = m_pedidosCancelados.load();
+    if (total > 0 && (completados + cancelados) >= total) {
+        notificarObservers(EventoSiger::TODOS_COMPLETADOS, "",
+                           "Todos los pedidos han finalizado: " + std::to_string(completados) + " completados");
     }
 }
 

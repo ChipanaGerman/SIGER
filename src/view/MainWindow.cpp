@@ -130,6 +130,15 @@ void MainWindow::conectarSignalsSlots() {
                 statusBar()->showMessage("Simulación detenida.");
                 m_mapaView->resetearMapa();
             });
+
+    connect(m_simulacionCtrl.get(), &SimulacionController::todosCompletados,
+            this, [this]() {
+                statusBar()->showMessage("✅ ¡Todos los pedidos completados! Simulación finalizada automáticamente.");
+                QMessageBox::information(this, "Simulación completada",
+                    "<b>¡Todas las entregas han sido completadas!</b><br>"
+                    "La simulación se ha detenido automáticamente.<br><br>"
+                    "Revisa las estadísticas para ver el resumen final.");
+            });
 }
 
 void MainWindow::onAcercaDe() {

@@ -43,7 +43,8 @@ enum class EventoSiger {
     SIMULACION_INICIADA,        ///< La simulación arrancó.
     SIMULACION_PAUSADA,         ///< La simulación fue pausada.
     SIMULACION_DETENIDA,        ///< La simulación se detuvo completamente.
-    ESTADISTICAS_ACTUALIZADAS   ///< Las estadísticas globales cambiaron.
+    ESTADISTICAS_ACTUALIZADAS,  ///< Las estadísticas globales cambiaron.
+    TODOS_COMPLETADOS           ///< Todos los pedidos registrados han finalizado.
 };
 
 // ─────────────────────────────────────────────────────────────────────────────

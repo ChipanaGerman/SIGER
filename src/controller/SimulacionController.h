@@ -38,6 +38,7 @@ signals:
     void simulacionIniciada();
     void simulacionPausada();
     void simulacionDetenida();
+    void todosCompletados();      ///< Todos los pedidos registrados finalizaron.
     void entregaCompletada(const QString& idPedido, const QString& idRepartidor);
     void estadoActualizado(int entregados, int fallidos, int enCamino);
 
