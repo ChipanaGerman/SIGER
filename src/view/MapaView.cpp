@@ -131,7 +131,11 @@ QPointF MapaView::getPunto(const QString& nombre) const {
     return QPointF(0, 0); // Plaza de Armas por defecto
 }
 
-void MapaView::animarEntrega(const QString& idPedido, const QString& origen, const QString& destino, const QString& /*repartidor*/) {
+void MapaView::animarEntrega(const QString& idPedido,
+                            const QString& origen,
+                            const QString& destino,
+                            const QString& repartidor,
+                            const QString& tipoVehiculo) {
     QPointF p1 = getPunto(origen);
     QPointF p2 = getPunto(destino);
 
@@ -139,19 +143,46 @@ void MapaView::animarEntrega(const QString& idPedido, const QString& origen, con
         p2 = QPointF(p1.x() + 80, p1.y() + 60);
     }
 
+    // Configurar color, icono y velocidad según el tipo de vehículo
+    QColor colorRuta(255, 112, 67, 220); // Default naranja
+    QColor colorMovil(46, 125, 50);       // Default verde
+    QString icono = "🚚";
+    double velAnim = 0.0050; // Velocidad pausada base (~6.5 seg a 30fps)
+
+    if (tipoVehiculo.contains("Moto", Qt::CaseInsensitive)) {
+        colorRuta = QColor(2, 136, 209, 230);  // Celeste brillante
+        colorMovil = QColor(1, 87, 155);       // Azul oscuro
+        icono = "🏍️";
+        velAnim = 0.0055;                      // ~6 seg
+    } else if (tipoVehiculo.contains("Auto", Qt::CaseInsensitive)) {
+        colorRuta = QColor(251, 140, 0, 230);  // Naranja
+        colorMovil = QColor(230, 81, 0);       // Naranja intenso
+        icono = "🚗";
+        velAnim = 0.0042;                      // ~8 seg
+    } else if (tipoVehiculo.contains("Camion", Qt::CaseInsensitive) || tipoVehiculo.contains("Camión", Qt::CaseInsensitive)) {
+        colorRuta = QColor(142, 36, 170, 230); // Púrpura
+        colorMovil = QColor(106, 27, 154);     // Púrpura oscuro
+        icono = "🚚";
+        velAnim = 0.0032;                      // ~10.5 seg
+    }
+
     // Línea activa de reparto
-    QPen penRuta(QColor(255, 112, 67, 220), 3, Qt::SolidLine, Qt::RoundCap);
+    QPen penRuta(colorRuta, 3.5, Qt::SolidLine, Qt::RoundCap);
     auto linea = m_scene->addLine(QLineF(p1, p2), penRuta);
 
-    // Móvil en movimiento (círculo verde/naranja llamativo)
+    // Móvil en movimiento (círculo llamativo)
     auto movil = m_scene->addEllipse(p1.x() - 8, p1.y() - 8, 16, 16,
                                      QPen(Qt::white, 2),
-                                     QBrush(QColor(46, 125, 50)));
+                                     QBrush(colorMovil));
 
-    // Etiqueta flotante con ID del pedido
+    // Etiqueta flotante con ID del pedido e icono del vehículo
     QFont fontId("Segoe UI", 8, QFont::Bold);
-    auto etiqueta = m_scene->addText(idPedido.isEmpty() ? "🚚 En Ruta" : idPedido + " 🚚", fontId);
-    etiqueta->setDefaultTextColor(QColor(230, 81, 0));
+    QString textoEtiqueta = idPedido.isEmpty() ? (icono + " En Ruta") : (icono + " " + idPedido);
+    if (!repartidor.isEmpty()) {
+        textoEtiqueta += " (" + repartidor + ")";
+    }
+    auto etiqueta = m_scene->addText(textoEtiqueta, fontId);
+    etiqueta->setDefaultTextColor(colorMovil);
     etiqueta->setPos(p1.x() - 25, p1.y() - 24);
 
     MovilAnimado anim;
@@ -159,8 +190,7 @@ void MapaView::animarEntrega(const QString& idPedido, const QString& origen, con
     anim.origen = p1;
     anim.destino = p2;
     anim.progreso = 0.0;
-    // Velocidad suave: tarda unos 2 a 3 segundos en cruzar
-    anim.velocidad = 0.012;
+    anim.velocidad = velAnim;
     anim.item = movil;
     anim.linea = linea;
     anim.etiqueta = etiqueta;
@@ -171,7 +201,7 @@ void MapaView::animarEntrega(const QString& idPedido, const QString& origen, con
 }
 
 void MapaView::animarEntregaSimple(const QString& origen, const QString& destino) {
-    animarEntrega("", origen, destino, "");
+    animarEntrega("", origen, destino, "", "");
 }
 
 void MapaView::onTimerAnimacion() {

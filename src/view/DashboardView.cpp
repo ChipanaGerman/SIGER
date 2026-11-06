@@ -34,14 +34,15 @@ void DashboardView::setupUi() {
     layout->addLayout(topLayout);
 
     m_tabla = new QTableWidget(this);
-    m_tabla->setColumnCount(7);
+    m_tabla->setColumnCount(8);
     m_tabla->setHorizontalHeaderLabels({
-        "ID Pedido", "Tipo", "Peso (kg)", "Origen", "Destino", "Estado", "Acción"
+        "ID Pedido", "Tipo", "Vehículo Req.", "Peso (kg)", "Origen", "Destino", "Estado", "Acción"
     });
     m_tabla->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
     m_tabla->horizontalHeader()->setSectionResizeMode(0, QHeaderView::ResizeToContents);
     m_tabla->horizontalHeader()->setSectionResizeMode(2, QHeaderView::ResizeToContents);
-    m_tabla->horizontalHeader()->setSectionResizeMode(6, QHeaderView::ResizeToContents);
+    m_tabla->horizontalHeader()->setSectionResizeMode(3, QHeaderView::ResizeToContents);
+    m_tabla->horizontalHeader()->setSectionResizeMode(7, QHeaderView::ResizeToContents);
     m_tabla->setSelectionBehavior(QAbstractItemView::SelectRows);
     m_tabla->setEditTriggers(QAbstractItemView::NoEditTriggers);
     m_tabla->setAlternatingRowColors(true);
@@ -61,7 +62,7 @@ void DashboardView::colorearFila(int fila, const QString& estado) {
         colorFondo = QColor(227, 242, 253); // Azul suave (NUEVO / ASIGNADO)
     }
 
-    for (int col = 0; col < 6; ++col) {
+    for (int col = 0; col < 7; ++col) {
         if (auto itm = m_tabla->item(fila, col)) {
             itm->setBackground(colorFondo);
         }
@@ -73,7 +74,8 @@ void DashboardView::slotAgregarFila(const QString& id,
                                    const QString& estado,
                                    double peso,
                                    const QString& origen,
-                                   const QString& destino) {
+                                   const QString& destino,
+                                   const QString& vehiculo) {
     // Verificar si ya existe
     for (int r = 0; r < m_tabla->rowCount(); ++r) {
         if (m_tabla->item(r, 0) && m_tabla->item(r, 0)->text() == id) {
@@ -93,22 +95,35 @@ void DashboardView::slotAgregarFila(const QString& id,
     itmTipo->setTextAlignment(Qt::AlignCenter);
     m_tabla->setItem(fila, 1, itmTipo);
 
+    // Formatear icono de vehículo
+    QString txtVehiculo = vehiculo.isEmpty() ? "Auto" : vehiculo;
+    if (txtVehiculo.contains("Moto", Qt::CaseInsensitive)) {
+        txtVehiculo = "🏍️ Moto";
+    } else if (txtVehiculo.contains("Camion", Qt::CaseInsensitive) || txtVehiculo.contains("Camión", Qt::CaseInsensitive)) {
+        txtVehiculo = "🚚 Camión";
+    } else {
+        txtVehiculo = "🚗 Auto";
+    }
+    auto itmVehiculo = new QTableWidgetItem(txtVehiculo);
+    itmVehiculo->setTextAlignment(Qt::AlignCenter);
+    m_tabla->setItem(fila, 2, itmVehiculo);
+
     auto itmPeso = new QTableWidgetItem(QString::number(peso, 'f', 1) + " kg");
     itmPeso->setTextAlignment(Qt::AlignCenter);
-    m_tabla->setItem(fila, 2, itmPeso);
+    m_tabla->setItem(fila, 3, itmPeso);
 
-    m_tabla->setItem(fila, 3, new QTableWidgetItem(origen));
-    m_tabla->setItem(fila, 4, new QTableWidgetItem(destino));
+    m_tabla->setItem(fila, 4, new QTableWidgetItem(origen));
+    m_tabla->setItem(fila, 5, new QTableWidgetItem(destino));
 
     auto itmEstado = new QTableWidgetItem(estado);
     itmEstado->setTextAlignment(Qt::AlignCenter);
-    m_tabla->setItem(fila, 5, itmEstado);
+    m_tabla->setItem(fila, 6, itmEstado);
 
     auto btnCancelar = new QPushButton("Cancelar", this);
     btnCancelar->setStyleSheet("background-color: #e57373; color: white; padding: 2px 6px; border-radius: 3px;");
     btnCancelar->setProperty("pedidoId", id);
     connect(btnCancelar, &QPushButton::clicked, this, &DashboardView::onBtnCancelarClicked);
-    m_tabla->setCellWidget(fila, 6, btnCancelar);
+    m_tabla->setCellWidget(fila, 7, btnCancelar);
 
     colorearFila(fila, estado);
 
@@ -118,14 +133,14 @@ void DashboardView::slotAgregarFila(const QString& id,
 void DashboardView::slotActualizarEstado(const QString& id, const QString& nuevoEstado) {
     for (int r = 0; r < m_tabla->rowCount(); ++r) {
         if (m_tabla->item(r, 0) && m_tabla->item(r, 0)->text() == id) {
-            if (auto itm = m_tabla->item(r, 5)) {
+            if (auto itm = m_tabla->item(r, 6)) {
                 itm->setText(nuevoEstado);
             }
             colorearFila(r, nuevoEstado);
 
             if (nuevoEstado.contains("COMPLETADO", Qt::CaseInsensitive) ||
                 nuevoEstado.contains("CANCELADO", Qt::CaseInsensitive)) {
-                if (auto btn = qobject_cast<QPushButton*>(m_tabla->cellWidget(r, 6))) {
+                if (auto btn = qobject_cast<QPushButton*>(m_tabla->cellWidget(r, 7))) {
                     btn->setEnabled(false);
                 }
             }

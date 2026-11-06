@@ -100,8 +100,8 @@ void MainWindow::conectarSignalsSlots() {
 
     // Animación en el mapa cuando un repartidor toma un pedido y se pone EN CAMINO
     connect(m_pedidoCtrl.get(), &PedidoController::pedidoEnCamino,
-            this, [this](const QString& id, const QString& origen, const QString& destino, const QString& rep) {
-                m_mapaView->animarEntrega(id, origen, destino, rep);
+            this, [this](const QString& id, const QString& origen, const QString& destino, const QString& rep, const QString& vehiculo) {
+                m_mapaView->animarEntrega(id, origen, destino, rep, vehiculo);
             });
 
     // ── Conexiones de Simulación ──────────────────────────────────────

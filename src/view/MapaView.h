@@ -26,7 +26,11 @@ public:
     ~MapaView() override = default;
 
 public slots:
-    void animarEntrega(const QString& idPedido, const QString& origen, const QString& destino, const QString& repartidor = "");
+    void animarEntrega(const QString& idPedido,
+                       const QString& origen,
+                       const QString& destino,
+                       const QString& repartidor = "",
+                       const QString& tipoVehiculo = "");
     void animarEntregaSimple(const QString& origen, const QString& destino);
     void resetearMapa();
 

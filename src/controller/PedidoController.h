@@ -43,10 +43,15 @@ signals:
                         const QString& estado,
                         double peso,
                         const QString& origen,
-                        const QString& destino);
+                        const QString& destino,
+                        const QString& vehiculo = "Auto");
 
     void pedidoActualizado(const QString& id, const QString& nuevoEstado);
-    void pedidoEnCamino(const QString& id, const QString& origen, const QString& destino, const QString& repartidor);
+    void pedidoEnCamino(const QString& id,
+                        const QString& origen,
+                        const QString& destino,
+                        const QString& repartidor,
+                        const QString& tipoVehiculo = "Auto");
     void estadisticasActualizadas(int total, int pendientes, int completados, int cancelados);
 
 private:

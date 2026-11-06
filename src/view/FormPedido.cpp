@@ -75,6 +75,17 @@ void FormPedido::setupUi() {
     m_cmbVehiculo->addItem("Camión (hasta 2000kg)");
     formLayout->addRow("Vehículo Sugerido:", m_cmbVehiculo);
 
+    // Ajustar vehículo sugerido según el peso automáticamente
+    connect(m_spnPeso, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, [this](double val) {
+        if (val <= 15.0) {
+            m_cmbVehiculo->setCurrentIndex(0); // Moto
+        } else if (val <= 100.0) {
+            m_cmbVehiculo->setCurrentIndex(1); // Auto
+        } else {
+            m_cmbVehiculo->setCurrentIndex(2); // Camión
+        }
+    });
+
     m_btnRegistrar = new QPushButton("➕ Registrar Pedido", this);
     m_btnRegistrar->setStyleSheet("background-color: #0288D1; color: white; font-weight: bold; padding: 8px; border-radius: 4px;");
     formLayout->addRow(m_btnRegistrar);

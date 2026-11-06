@@ -29,15 +29,19 @@ int main(int argc, char* argv[]) {
     FactoriaVehiculos::registrar("Auto",   std::make_unique<AutoFactory>());
     FactoriaVehiculos::registrar("Camion", std::make_unique<CamionFactory>());
 
-    // Crear flota inicial usando Factory Method
-    auto vehiculo1 = FactoriaVehiculos::crear("Moto",   "V-01", "MTO-501", 15.0);
-    auto vehiculo2 = FactoriaVehiculos::crear("Auto",   "V-02", "AUT-702", 100.0);
-    auto vehiculo3 = FactoriaVehiculos::crear("Camion", "V-03", "CAM-903", 2000.0);
+    // Crear flota inicial usando Factory Method (Motos, Autos y Camiones)
+    auto moto1   = FactoriaVehiculos::crear("Moto",   "V-01", "MTO-501", 15.0);
+    auto moto2   = FactoriaVehiculos::crear("Moto",   "V-02", "MTO-502", 15.0);
+    auto auto1   = FactoriaVehiculos::crear("Auto",   "V-03", "AUT-701", 100.0);
+    auto auto2   = FactoriaVehiculos::crear("Auto",   "V-04", "AUT-702", 100.0);
+    auto camion1 = FactoriaVehiculos::crear("Camion", "V-05", "CAM-901", 2000.0);
 
-    // 2. Crear Repartidores
-    auto rep1 = std::make_shared<Repartidor>("R-101", "Carlos Quispe", vehiculo1);
-    auto rep2 = std::make_shared<Repartidor>("R-102", "María Flores",  vehiculo2);
-    auto rep3 = std::make_shared<Repartidor>("R-103", "Pedro Mamani",  vehiculo3);
+    // 2. Crear Repartidores con sus respectivos vehículos
+    auto rep1 = std::make_shared<Repartidor>("R-101", "Carlos Quispe (Moto 1)", moto1);
+    auto rep2 = std::make_shared<Repartidor>("R-102", "Lucía Torres (Moto 2)",  moto2);
+    auto rep3 = std::make_shared<Repartidor>("R-103", "María Flores (Auto 1)",  auto1);
+    auto rep4 = std::make_shared<Repartidor>("R-104", "Jorge Ramos (Auto 2)",   auto2);
+    auto rep5 = std::make_shared<Repartidor>("R-105", "Pedro Mamani (Camión)",  camion1);
 
     // 3. Crear Estructuras del Modelo
     auto gestorPedidos = std::make_shared<GestorPedidos>();
@@ -48,6 +52,8 @@ int main(int argc, char* argv[]) {
     simulador->agregarRepartidor(rep1);
     simulador->agregarRepartidor(rep2);
     simulador->agregarRepartidor(rep3);
+    simulador->agregarRepartidor(rep4);
+    simulador->agregarRepartidor(rep5);
 
     auto generador = std::make_shared<GeneradorEventos>(gestorPedidos, 2500);
 

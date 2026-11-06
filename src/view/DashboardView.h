@@ -24,7 +24,8 @@ public slots:
                          const QString& estado,
                          double peso,
                          const QString& origen,
-                         const QString& destino);
+                         const QString& destino,
+                         const QString& vehiculo = "Auto");
 
     void slotActualizarEstado(const QString& id, const QString& nuevoEstado);
     void slotLimpiarTabla();

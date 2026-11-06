@@ -29,7 +29,8 @@ void PedidoController::onEvento(const DatoEvento& evento) {
                     QString::fromStdString(ped->getEstadoStr()),
                     ped->getPaquete() ? ped->getPaquete()->getPesoKg() : 1.0,
                     QString::fromStdString(ped->getOrigen()),
-                    QString::fromStdString(ped->getDestino())
+                    QString::fromStdString(ped->getDestino()),
+                    QString::fromStdString(ped->getTipoVehiculoRequerido())
                 );
             }
             auto stats = m_gestor->getEstadisticas();
@@ -48,7 +49,8 @@ void PedidoController::onEvento(const DatoEvento& evento) {
                     QString::fromStdString(ped->getId()),
                     QString::fromStdString(ped->getOrigen()),
                     QString::fromStdString(ped->getDestino()),
-                    QString::fromStdString(ped->getRepartidorId())
+                    QString::fromStdString(ped->getRepartidorId()),
+                    QString::fromStdString(ped->getTipoVehiculoRequerido())
                 );
             }
             auto stats = m_gestor->getEstadisticas();
@@ -87,7 +89,7 @@ void PedidoController::slotAgregarPedido(const QString& tipo,
                                          const QString& origen,
                                          const QString& destino,
                                          double distancia,
-                                         const QString& /*tipoVehiculo*/) {
+                                         const QString& tipoVehiculo) {
     if (!m_gestor) return;
 
     std::ostringstream oss;
@@ -113,12 +115,23 @@ void PedidoController::slotAgregarPedido(const QString& tipo,
         );
     }
 
+    // Normalizar tipo de vehículo requerido
+    std::string vehiculoReq = "Auto";
+    if (tipoVehiculo.contains("Moto", Qt::CaseInsensitive)) {
+        vehiculoReq = (peso <= 15.0) ? "Moto" : ((peso <= 100.0) ? "Auto" : "Camion");
+    } else if (tipoVehiculo.contains("Camion", Qt::CaseInsensitive) || tipoVehiculo.contains("Camión", Qt::CaseInsensitive)) {
+        vehiculoReq = "Camion";
+    } else {
+        vehiculoReq = (peso <= 100.0) ? "Auto" : "Camion";
+    }
+
     auto pedido = std::make_shared<Pedido>(
         id,
         paquete,
         origen.toStdString(),
         destino.toStdString(),
-        distancia
+        distancia,
+        vehiculoReq
     );
 
     // Al registrarlo, el gestor notifica PEDIDO_NUEVO a onEvento,
@@ -143,7 +156,8 @@ void PedidoController::slotRefrescarTodos() {
             QString::fromStdString(ped->getEstadoStr()),
             ped->getPaquete() ? ped->getPaquete()->getPesoKg() : 0.0,
             QString::fromStdString(ped->getOrigen()),
-            QString::fromStdString(ped->getDestino())
+            QString::fromStdString(ped->getDestino()),
+            QString::fromStdString(ped->getTipoVehiculoRequerido())
         );
     }
 
