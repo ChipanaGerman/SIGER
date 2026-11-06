@@ -50,10 +50,10 @@ void GeneradorEventos::hiloGenerador() {
     std::uniform_int_distribution<int>     distTipo(0, 1);
     std::uniform_int_distribution<int>     distDias(1, 5);
 
-    // Calles representativas de Arequipa
+    // Calles representativas de Arequipa (nombres normalizados)
     const std::vector<std::string> ubicaciones = {
         "Plaza de Armas",
-        "Av. Ejército 450",
+        "Av. Ejercito 450",
         "Calle Mercaderes 120",
         "Av. Dolores 890",
         "Urb. Umacollo B-12",
@@ -77,7 +77,6 @@ void GeneradorEventos::hiloGenerador() {
 
         auto gestor = m_gestorPedidos.lock();
         if (!gestor) {
-            // El gestor ya no existe, terminar hilo
             break;
         }
 

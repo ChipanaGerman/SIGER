@@ -23,7 +23,7 @@ namespace siger {
  */
 struct EstadisticasPedidos {
     int total      { 0 }; ///< Total de pedidos registrados.
-    int pendientes { 0 }; ///< Pedidos en cola (aún no despachados).
+    int pendientes { 0 }; ///< Pedidos en cola o activos (aún no finalizados).
     int completados{ 0 }; ///< Pedidos finalizados correctamente.
     int cancelados { 0 }; ///< Pedidos anulados.
 };
@@ -31,11 +31,14 @@ struct EstadisticasPedidos {
 /**
  * @class GestorPedidos
  * @brief Controlador del ciclo de vida de los pedidos de entrega.
+ *
+ * Implementa ISubject para notificar eventos a la GUI, e IObserver
+ * para recibir notificaciones del SimuladorEntregas cuando un pedido se completa.
  */
-class GestorPedidos : public ISubject {
+class GestorPedidos : public ISubject, public IObserver {
 public:
     explicit GestorPedidos(std::shared_ptr<Cola<std::shared_ptr<Pedido>>> cola = nullptr);
-    ~GestorPedidos() = default;
+    ~GestorPedidos() override = default;
 
     // No copiable ni movible
     GestorPedidos(const GestorPedidos&)            = delete;
@@ -45,8 +48,12 @@ public:
         return m_colaEspera;
     }
 
+    // Implementación de IObserver (escucha a SimuladorEntregas)
+    void onEvento(const DatoEvento& evento) override;
+
     bool registrarPedido(std::shared_ptr<Pedido> pedido);
     bool cancelarPedido(const std::string& id);
+    void marcarCompletado(const std::string& id);
     [[nodiscard]] std::optional<std::shared_ptr<Pedido>> obtenerSiguiente();
     [[nodiscard]] std::optional<std::shared_ptr<Pedido>> obtenerPedido(const std::string& id) const;
     [[nodiscard]] std::vector<std::shared_ptr<Pedido>> getPedidosActivos() const;

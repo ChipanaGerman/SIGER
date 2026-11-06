@@ -42,7 +42,7 @@ void FormPedido::setupUi() {
 
     const QStringList ubicaciones = {
         "Plaza de Armas",
-        "Av. Ejército 450",
+        "Av. Ejercito 450",
         "Calle Mercaderes 120",
         "Av. Dolores 890",
         "Urb. Umacollo B-12",

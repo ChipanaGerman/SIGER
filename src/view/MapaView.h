@@ -13,6 +13,8 @@
 #include <QTimer>
 #include <QMap>
 #include <QPointF>
+#include <QLabel>
+#include <vector>
 
 namespace siger {
 
@@ -24,8 +26,13 @@ public:
     ~MapaView() override = default;
 
 public slots:
-    void animarEntrega(const QString& origen, const QString& destino);
+    void animarEntrega(const QString& idPedido, const QString& origen, const QString& destino, const QString& repartidor = "");
+    void animarEntregaSimple(const QString& origen, const QString& destino);
     void resetearMapa();
+
+protected:
+    void resizeEvent(QResizeEvent* event) override;
+    void showEvent(QShowEvent* event) override;
 
 private slots:
     void onTimerAnimacion();
@@ -33,23 +40,24 @@ private slots:
 private:
     void setupUi();
     void inicializarNodos();
+    QPointF getPunto(const QString& nombre) const;
 
     QGraphicsView*  m_view{nullptr};
     QGraphicsScene* m_scene{nullptr};
     QTimer*         m_timerAnim{nullptr};
+    QLabel*         m_lblInfo{nullptr};
 
-    struct NodoMapa {
-        QString nombre;
-        QPointF pos;
-    };
     QMap<QString, QPointF> m_posiciones;
 
     struct MovilAnimado {
+        QString idPedido;
         QPointF origen;
         QPointF destino;
         double progreso{0.0};
+        double velocidad{0.015};
         QGraphicsEllipseItem* item{nullptr};
         QGraphicsLineItem*    linea{nullptr};
+        QGraphicsTextItem*    etiqueta{nullptr};
     };
     std::vector<MovilAnimado> m_moviles;
 };

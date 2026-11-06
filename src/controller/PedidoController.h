@@ -2,9 +2,6 @@
 /**
  * @file PedidoController.h
  * @brief Controlador MVC para la gestión de pedidos en SIGER.
- *
- * Conecta las vistas de la GUI con el modelo GestorPedidos e implementa
- * IObserver para responder a cambios de estado del modelo.
  */
 
 #include <QObject>
@@ -49,6 +46,7 @@ signals:
                         const QString& destino);
 
     void pedidoActualizado(const QString& id, const QString& nuevoEstado);
+    void pedidoEnCamino(const QString& id, const QString& origen, const QString& destino, const QString& repartidor);
     void estadisticasActualizadas(int total, int pendientes, int completados, int cancelados);
 
 private:

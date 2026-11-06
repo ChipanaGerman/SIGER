@@ -20,6 +20,46 @@ PedidoController::PedidoController(std::shared_ptr<GestorPedidos> gestor, QObjec
 void PedidoController::onEvento(const DatoEvento& evento) {
     if (evento.tipo == EventoSiger::PEDIDO_NUEVO) {
         if (m_gestor) {
+            auto optPedido = m_gestor->obtenerPedido(evento.idEntidad);
+            if (optPedido.has_value()) {
+                auto ped = optPedido.value();
+                emit pedidoAgregado(
+                    QString::fromStdString(ped->getId()),
+                    QString::fromStdString(ped->getPaquete() ? ped->getPaquete()->getTipo() : "Estándar"),
+                    QString::fromStdString(ped->getEstadoStr()),
+                    ped->getPaquete() ? ped->getPaquete()->getPesoKg() : 1.0,
+                    QString::fromStdString(ped->getOrigen()),
+                    QString::fromStdString(ped->getDestino())
+                );
+            }
+            auto stats = m_gestor->getEstadisticas();
+            emit estadisticasActualizadas(stats.total,
+                                          stats.pendientes,
+                                          stats.completados,
+                                          stats.cancelados);
+        }
+    } else if (evento.tipo == EventoSiger::PEDIDO_EN_CAMINO) {
+        emit pedidoActualizado(QString::fromStdString(evento.idEntidad), "EN CAMINO");
+        if (m_gestor) {
+            auto optPedido = m_gestor->obtenerPedido(evento.idEntidad);
+            if (optPedido.has_value()) {
+                auto ped = optPedido.value();
+                emit pedidoEnCamino(
+                    QString::fromStdString(ped->getId()),
+                    QString::fromStdString(ped->getOrigen()),
+                    QString::fromStdString(ped->getDestino()),
+                    QString::fromStdString(ped->getRepartidorId())
+                );
+            }
+            auto stats = m_gestor->getEstadisticas();
+            emit estadisticasActualizadas(stats.total,
+                                          stats.pendientes,
+                                          stats.completados,
+                                          stats.cancelados);
+        }
+    } else if (evento.tipo == EventoSiger::PEDIDO_COMPLETADO) {
+        emit pedidoActualizado(QString::fromStdString(evento.idEntidad), "COMPLETADO");
+        if (m_gestor) {
             auto stats = m_gestor->getEstadisticas();
             emit estadisticasActualizadas(stats.total,
                                           stats.pendientes,
@@ -28,17 +68,6 @@ void PedidoController::onEvento(const DatoEvento& evento) {
         }
     } else if (evento.tipo == EventoSiger::PEDIDO_CANCELADO) {
         emit pedidoActualizado(QString::fromStdString(evento.idEntidad), "CANCELADO");
-        if (m_gestor) {
-            auto stats = m_gestor->getEstadisticas();
-            emit estadisticasActualizadas(stats.total,
-                                          stats.pendientes,
-                                          stats.completados,
-                                          stats.cancelados);
-        }
-    } else if (evento.tipo == EventoSiger::PEDIDO_EN_CAMINO) {
-        emit pedidoActualizado(QString::fromStdString(evento.idEntidad), "EN_CAMINO");
-    } else if (evento.tipo == EventoSiger::PEDIDO_COMPLETADO) {
-        emit pedidoActualizado(QString::fromStdString(evento.idEntidad), "COMPLETADO");
         if (m_gestor) {
             auto stats = m_gestor->getEstadisticas();
             emit estadisticasActualizadas(stats.total,
@@ -89,20 +118,9 @@ void PedidoController::slotAgregarPedido(const QString& tipo,
         distancia
     );
 
-    if (m_gestor->registrarPedido(pedido)) {
-        emit pedidoAgregado(QString::fromStdString(id),
-                            QString::fromStdString(paquete->getTipo()),
-                            QString::fromStdString(pedido->getEstadoStr()),
-                            peso,
-                            origen,
-                            destino);
-
-        auto stats = m_gestor->getEstadisticas();
-        emit estadisticasActualizadas(stats.total,
-                                      stats.pendientes,
-                                      stats.completados,
-                                      stats.cancelados);
-    }
+    // Al registrarlo, el gestor notifica PEDIDO_NUEVO a onEvento,
+    // el cual se encarga de emitir pedidoAgregado y estadisticasActualizadas.
+    m_gestor->registrarPedido(pedido);
 }
 
 void PedidoController::slotCancelarPedido(const QString& id) {

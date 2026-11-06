@@ -189,6 +189,17 @@ protected:
      */
     void notificarObservers(const std::string& mensaje) {
         EventoSiger ev = EventoSiger::ESTADISTICAS_ACTUALIZADAS;
+        std::string id = "";
+        auto pos1 = mensaje.find(':');
+        if (pos1 != std::string::npos) {
+            auto pos2 = mensaje.find(':', pos1 + 1);
+            if (pos2 != std::string::npos) {
+                id = mensaje.substr(pos1 + 1, pos2 - pos1 - 1);
+            } else {
+                id = mensaje.substr(pos1 + 1);
+            }
+        }
+
         if (mensaje.find("PEDIDO_REGISTRADO") != std::string::npos || mensaje.find("PEDIDO_NUEVO") != std::string::npos) {
             ev = EventoSiger::PEDIDO_NUEVO;
         } else if (mensaje.find("PEDIDO_ASIGNADO") != std::string::npos) {
@@ -197,7 +208,7 @@ protected:
             ev = EventoSiger::PEDIDO_EN_CAMINO;
         } else if (mensaje.find("PEDIDO_COMPLETADO") != std::string::npos) {
             ev = EventoSiger::PEDIDO_COMPLETADO;
-        } else if (mensaje.find("PEDIDO_CANCELADO") != std::string::npos) {
+        } else if (mensaje.find("PEDIDO_CANCELADO") != std::string::npos || mensaje.find("PEDIDO_FALLIDO") != std::string::npos) {
             ev = EventoSiger::PEDIDO_CANCELADO;
         } else if (mensaje.find("SIMULACION_INICIADA") != std::string::npos) {
             ev = EventoSiger::SIMULACION_INICIADA;
@@ -206,7 +217,7 @@ protected:
         } else if (mensaje.find("SIMULACION_DETENIDA") != std::string::npos) {
             ev = EventoSiger::SIMULACION_DETENIDA;
         }
-        notificarObservers(DatoEvento{ev, "", mensaje});
+        notificarObservers(DatoEvento{ev, id, mensaje});
     }
 
 private:

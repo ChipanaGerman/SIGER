@@ -1,12 +1,6 @@
 /**
- * @file   SimuladorEntregas.cpp
- * @brief  Implementación de SimuladorEntregas — motor multihilo de SIGER.
- *
- * Cada repartidor corre en su propio std::thread ejecutando hiloRepartidor().
- * La sincronización productor-consumidor se realiza con m_mutex +
- * m_condVar; la pausa/reanudación usa m_pausado (atomic<bool>).
- *
- * @author SIGER Dev Team
+ * @file SimuladorEntregas.cpp
+ * @brief Implementación de SimuladorEntregas — motor multihilo de SIGER.
  */
 
 #include "SimuladorEntregas.h"
@@ -18,46 +12,40 @@
 
 namespace siger {
 
-// ── Constructor / Destructor ──────────────────────────────────────────────────
-
-SimuladorEntregas::SimuladorEntregas(
-    std::shared_ptr<Cola<std::shared_ptr<Pedido>>> cola)
+SimuladorEntregas::SimuladorEntregas(std::shared_ptr<Cola<std::shared_ptr<Pedido>>> cola)
     : m_colaPedidos(std::move(cola))
 {
     if (!m_colaPedidos) {
-        throw std::invalid_argument(
-            "SimuladorEntregas: la cola de pedidos no puede ser nula.");
+        throw std::invalid_argument("SimuladorEntregas: la cola de pedidos no puede ser nula.");
     }
 }
 
-SimuladorEntregas::~SimuladorEntregas()
-{
-    // Garantiza que los hilos se detengan antes de destruir el objeto.
+SimuladorEntregas::~SimuladorEntregas() {
     detener();
 }
 
-// ── Gestión de repartidores ───────────────────────────────────────────────────
-
-void SimuladorEntregas::agregarRepartidor(std::shared_ptr<Repartidor> repartidor)
-{
-    if (!repartidor) return;
-
-    std::lock_guard<std::mutex> lock(m_mutex);
-
-    if (m_corriendo.load()) {
-        // La simulación ya arrancó: lanzar hilo inmediatamente.
-        m_repartidores.push_back(repartidor);
-        m_hilos.emplace_back(&SimuladorEntregas::hiloRepartidor, this, repartidor);
-    } else {
-        m_repartidores.push_back(repartidor);
+void SimuladorEntregas::onEvento(const DatoEvento& evento) {
+    if (evento.tipo == EventoSiger::PEDIDO_NUEVO) {
+        despertar();
     }
 }
 
-// ── Control de la simulación ──────────────────────────────────────────────────
+void SimuladorEntregas::despertar() {
+    m_condVar.notify_all();
+}
 
-void SimuladorEntregas::iniciar()
-{
-    // Idempotente: evita doble arranque.
+void SimuladorEntregas::agregarRepartidor(std::shared_ptr<Repartidor> repartidor) {
+    if (!repartidor) return;
+
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_repartidores.push_back(repartidor);
+
+    if (m_corriendo.load()) {
+        m_hilos.emplace_back(&SimuladorEntregas::hiloRepartidor, this, repartidor);
+    }
+}
+
+void SimuladorEntregas::iniciar() {
     if (m_corriendo.exchange(true)) return;
 
     m_pausado.store(false);
@@ -72,36 +60,30 @@ void SimuladorEntregas::iniciar()
         }
     }
 
-    notificarObservers("SIMULACION_INICIADA");
+    notificarObservers(EventoSiger::SIMULACION_INICIADA, "", "Simulación iniciada");
 }
 
-void SimuladorEntregas::pausar()
-{
+void SimuladorEntregas::pausar() {
     if (!m_corriendo.load()) return;
 
     m_pausado.store(true);
-    notificarObservers("SIMULACION_PAUSADA");
-    // No notificamos m_condVar: los hilos que ya están en sleep seguirán
-    // hasta completar su viaje actual; los que esperan entrada se bloquearán.
+    notificarObservers(EventoSiger::SIMULACION_PAUSADA, "", "Simulación pausada");
 }
 
-void SimuladorEntregas::reanudar()
-{
+void SimuladorEntregas::reanudar() {
     if (!m_corriendo.load()) return;
 
     m_pausado.store(false);
-    m_condVar.notify_all();   // desbloquea hilos esperando en condVar
-    notificarObservers("SIMULACION_REANUDADA");
+    m_condVar.notify_all();
+    notificarObservers(EventoSiger::SIMULACION_INICIADA, "", "Simulación reanudada");
 }
 
-void SimuladorEntregas::detener()
-{
-    if (!m_corriendo.exchange(false)) return;  // ya estaba detenido
+void SimuladorEntregas::detener() {
+    if (!m_corriendo.exchange(false)) return;
 
     m_pausado.store(false);
-    m_condVar.notify_all();   // despierta todos los hilos para que salgan
+    m_condVar.notify_all();
 
-    // Join ordenado de todos los hilos.
     std::lock_guard<std::mutex> lock(m_mutex);
     for (auto& hilo : m_hilos) {
         if (hilo.joinable()) {
@@ -110,26 +92,18 @@ void SimuladorEntregas::detener()
     }
     m_hilos.clear();
 
-    notificarObservers("SIMULACION_DETENIDA");
+    notificarObservers(EventoSiger::SIMULACION_DETENIDA, "", "Simulación detenida");
 }
 
-// ── Configuración ─────────────────────────────────────────────────────────────
-
-void SimuladorEntregas::setVelocidad(int ms)
-{
-    // Mínimo 100 ms para evitar espins.
+void SimuladorEntregas::setVelocidad(int ms) {
     m_velocidadSimulacion = std::max(100, ms);
 }
 
-// ── Consultas ─────────────────────────────────────────────────────────────────
-
-bool SimuladorEntregas::isCorriendo() const
-{
+bool SimuladorEntregas::isCorriendo() const {
     return m_corriendo.load() && !m_pausado.load();
 }
 
-EstadisticasSimulacion SimuladorEntregas::getEstadisticas() const
-{
+EstadisticasSimulacion SimuladorEntregas::getEstadisticas() const {
     return EstadisticasSimulacion {
         m_totalEntregados.load(),
         m_totalFallidos.load(),
@@ -137,40 +111,24 @@ EstadisticasSimulacion SimuladorEntregas::getEstadisticas() const
     };
 }
 
-// ── Función de hilo ───────────────────────────────────────────────────────────
-
-void SimuladorEntregas::hiloRepartidor(std::shared_ptr<Repartidor> rep)
-{
-    // Lambda que simula el trayecto de entrega durmiendo el tiempo proporcional
-    // a la distancia.  Captura por referencia los miembros del simulador.
-    auto simularViaje = [&](double distanciaKm) {
-        const int duracionMs =
-            static_cast<int>(distanciaKm * m_velocidadSimulacion);
-        std::this_thread::sleep_for(std::chrono::milliseconds(duracionMs));
-    };
-
+void SimuladorEntregas::hiloRepartidor(std::shared_ptr<Repartidor> rep) {
     while (m_corriendo.load()) {
         std::shared_ptr<Pedido> pedido;
 
-        // ── Esperar un pedido disponible ──────────────────────────────────────
+        // Esperar un pedido disponible
         {
             std::unique_lock<std::mutex> lock(m_mutex);
 
-            // Predicado: salir de la espera cuando haya trabajo real o se deba
-            // terminar.  También respeta la bandera de pausa.
-            m_condVar.wait(lock, [this] {
-                return !m_corriendo.load()                     // petición de stop
-                    || (!m_pausado.load()                      // no pausado
-                        && !m_colaPedidos->isEmpty());         // hay pedidos
+            m_condVar.wait_for(lock, std::chrono::milliseconds(200), [this] {
+                return !m_corriendo.load()
+                    || (!m_pausado.load() && !m_colaPedidos->isEmpty());
             });
 
-            // Si nos despertaron para detener, salir del loop.
             if (!m_corriendo.load()) break;
+            if (m_pausado.load() || m_colaPedidos->isEmpty()) continue;
 
-            // Extraer el siguiente pedido de la cola.
             auto optPedido = m_colaPedidos->pop();
             if (!optPedido.has_value()) {
-                // Falsa alarma (race con otro hilo): volver a esperar.
                 continue;
             }
             pedido = std::move(optPedido.value());
@@ -179,59 +137,64 @@ void SimuladorEntregas::hiloRepartidor(std::shared_ptr<Repartidor> rep)
         if (!pedido) continue;
 
         try {
-            // ── 1. Marcar EN_CAMINO ───────────────────────────────────────────
+            // 1. Marcar EN_CAMINO
             pedido->setEstado(EstadoPedido::EN_CAMINO);
             pedido->setRepartidorId(rep->getId());
             ++m_enCamino;
 
-            notificarObservers(
-                "EN_CAMINO:" + pedido->getId() + ":" + rep->getId());
+            notificarObservers(EventoSiger::PEDIDO_EN_CAMINO,
+                               pedido->getId(),
+                               "EN_CAMINO:" + pedido->getId() + ":" + rep->getId());
 
-            // ── 2. Simular el viaje ───────────────────────────────────────────
-            const double distancia = pedido->getDistanciaKm();
-            simularViaje(distancia);
+            // 2. Simular el viaje con retardo reactivo
+            double velKmh = (rep && rep->getVehiculo()) ? rep->getVehiculo()->getVelocidadKmh() : 45.0;
+            double minutos = (pedido->getDistanciaKm() / velKmh) * 60.0;
+            // Escalar a milisegundos de animación (aprox 1 a 2.5 seg por viaje)
+            int duracionMs = std::max(600, static_cast<int>(minutos * (m_velocidadSimulacion / 6.0)));
 
-            // ── 3. Comprobar si se detuvo durante el viaje ────────────────────
+            int transcurrido = 0;
+            while (transcurrido < duracionMs && m_corriendo.load()) {
+                while (m_pausado.load() && m_corriendo.load()) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+                }
+                std::this_thread::sleep_for(std::chrono::milliseconds(50));
+                transcurrido += 50;
+            }
+
+            // 3. Comprobar si se canceló o detuvo durante el viaje
             if (!m_corriendo.load()) {
-                // Marcar fallido al abortar.
                 pedido->setEstado(EstadoPedido::FALLIDO);
                 --m_enCamino;
                 ++m_totalFallidos;
-                notificarObservers(
-                    "PEDIDO_FALLIDO:" + pedido->getId() + ":" + rep->getId());
+                notificarObservers(EventoSiger::PEDIDO_CANCELADO,
+                                   pedido->getId(),
+                                   "PEDIDO_FALLIDO:" + pedido->getId());
                 break;
             }
 
-            // ── 4. Marcar COMPLETADO ──────────────────────────────────────────
+            // 4. Marcar COMPLETADO
             pedido->setEstado(EstadoPedido::COMPLETADO);
+            if (pedido->getPaquete()) {
+                pedido->getPaquete()->setEstado(EstadoPaquete::ENTREGADO);
+            }
             --m_enCamino;
             ++m_totalEntregados;
 
-            notificarObservers(
-                "PEDIDO_COMPLETADO:" + pedido->getId() + ":" + rep->getId());
+            notificarObservers(EventoSiger::PEDIDO_COMPLETADO,
+                               pedido->getId(),
+                               "PEDIDO_COMPLETADO:" + pedido->getId() + ":" + rep->getId());
 
-        } catch (const std::exception& ex) {
-            // Error inesperado: registrar como fallido y continuar.
-            if (pedido) {
-                pedido->setEstado(EstadoPedido::FALLIDO);
-                --m_enCamino;
-                ++m_totalFallidos;
-                notificarObservers(
-                    "PEDIDO_FALLIDO:" + pedido->getId() + ":" + rep->getId()
-                    + " [ex:" + ex.what() + "]");
-            }
         } catch (...) {
             if (pedido) {
                 pedido->setEstado(EstadoPedido::FALLIDO);
                 --m_enCamino;
                 ++m_totalFallidos;
-                notificarObservers(
-                    "PEDIDO_FALLIDO:" + pedido->getId() + ":" + rep->getId()
-                    + " [error desconocido]");
+                notificarObservers(EventoSiger::PEDIDO_CANCELADO,
+                                   pedido->getId(),
+                                   "PEDIDO_FALLIDO:" + pedido->getId());
             }
         }
 
-        // Notificar a otros hilos que puede haber cambios en la cola.
         m_condVar.notify_all();
     }
 }

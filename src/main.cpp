@@ -59,6 +59,8 @@ int main(int argc, char* argv[]) {
     gestorPedidos->suscribir(pedidoCtrl);
     simulador->suscribir(simulacionCtrl);
     simulador->suscribir(pedidoCtrl);
+    simulador->suscribir(gestorPedidos);   // GestorPedidos contabiliza los pedidos completados
+    gestorPedidos->suscribir(simulador);   // Simulador despierta repartidores ante nuevos pedidos
 
     // 7. Iniciar Interfaz Gráfica
     MainWindow window(pedidoCtrl, simulacionCtrl);

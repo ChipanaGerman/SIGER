@@ -98,10 +98,10 @@ void MainWindow::conectarSignalsSlots() {
     connect(m_pedidoCtrl.get(), &PedidoController::estadisticasActualizadas,
             m_estadisticasView, &EstadisticasView::slotActualizarEstadisticas);
 
-    // Animación de mapa al agregar/despachar pedido
-    connect(m_pedidoCtrl.get(), &PedidoController::pedidoAgregado,
-            this, [this](const QString&, const QString&, const QString&, double, const QString& origen, const QString& destino) {
-                m_mapaView->animarEntrega(origen, destino);
+    // Animación en el mapa cuando un repartidor toma un pedido y se pone EN CAMINO
+    connect(m_pedidoCtrl.get(), &PedidoController::pedidoEnCamino,
+            this, [this](const QString& id, const QString& origen, const QString& destino, const QString& rep) {
+                m_mapaView->animarEntrega(id, origen, destino, rep);
             });
 
     // ── Conexiones de Simulación ──────────────────────────────────────
@@ -128,6 +128,7 @@ void MainWindow::conectarSignalsSlots() {
     connect(m_simulacionCtrl.get(), &SimulacionController::simulacionDetenida,
             this, [this]() {
                 statusBar()->showMessage("Simulación detenida.");
+                m_mapaView->resetearMapa();
             });
 }
 
