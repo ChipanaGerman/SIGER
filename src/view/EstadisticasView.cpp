@@ -79,8 +79,8 @@ void EstadisticasView::slotActualizarEstadisticas(int total, int pendientes, int
     m_lblCancelados->setText(QString::number(cancelados));
 
     double tasa = 0.0;
-    if (completados + cancelados > 0) {
-        tasa = (static_cast<double>(completados) / (completados + cancelados)) * 100.0;
+    if (total > 0) {
+        tasa = (static_cast<double>(completados) / total) * 100.0;
     }
     m_lblEfectividad->setText(QString::number(tasa, 'f', 1) + "%");
 

@@ -60,6 +60,9 @@ void PedidoController::onEvento(const DatoEvento& evento) {
     } else if (evento.tipo == EventoSiger::PEDIDO_COMPLETADO) {
         emit pedidoActualizado(QString::fromStdString(evento.idEntidad), "COMPLETADO");
         if (m_gestor) {
+            // Forzamos el conteo ANTES de leer estadísticas, por si GestorPedidos
+            // aún no procesó su onEvento (orden de observers no garantizado).
+            m_gestor->marcarCompletado(evento.idEntidad);
             auto stats = m_gestor->getEstadisticas();
             emit estadisticasActualizadas(stats.total,
                                           stats.pendientes,

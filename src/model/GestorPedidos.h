@@ -11,8 +11,10 @@
 
 #include <atomic>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <string>
+#include <unordered_set>
 #include <vector>
 
 namespace siger {
@@ -64,6 +66,9 @@ private:
     std::shared_ptr<Cola<std::shared_ptr<Pedido>>> m_colaEspera;
     std::atomic<int>                              m_pedidosCompletados{ 0 };
     std::atomic<int>                              m_pedidosCancelados { 0 };
+    /// @brief Conjunto de IDs ya contabilizados como completados (evita doble conteo).
+    std::unordered_set<std::string>               m_contabilizados;
+    mutable std::mutex                            m_contMutex;
 };
 
 } // namespace siger

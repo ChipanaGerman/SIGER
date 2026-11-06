@@ -5,6 +5,7 @@
 
 #include "GestorPedidos.h"
 #include <algorithm>
+#include <mutex>
 
 namespace siger {
 
@@ -63,16 +64,23 @@ bool GestorPedidos::cancelarPedido(const std::string& id) {
 }
 
 void GestorPedidos::marcarCompletado(const std::string& id) {
+    // Usamos el set de contabilizados para evitar doble conteo aunque el
+    // SimuladorEntregas ya haya seteado COMPLETADO antes de notificar.
+    {
+        std::lock_guard<std::mutex> lk(m_contMutex);
+        if (m_contabilizados.count(id)) return; // ya contado
+        m_contabilizados.insert(id);
+    }
+
+    ++m_pedidosCompletados;
+
     auto opt = m_repositorioPedidos.obtener(id);
     if (!opt.has_value()) return;
-
     auto& pedido = opt.value();
-    if (pedido->getEstado() != EstadoPedido::COMPLETADO) {
-        pedido->setEstado(EstadoPedido::COMPLETADO);
-        if (pedido->getPaquete()) {
-            pedido->getPaquete()->setEstado(EstadoPaquete::ENTREGADO);
-        }
-        ++m_pedidosCompletados;
+    // Aseguramos que el estado quede en COMPLETADO (puede que ya lo esté)
+    pedido->setEstado(EstadoPedido::COMPLETADO);
+    if (pedido->getPaquete()) {
+        pedido->getPaquete()->setEstado(EstadoPaquete::ENTREGADO);
     }
 }
 
