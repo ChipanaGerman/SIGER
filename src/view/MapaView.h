@@ -33,10 +33,14 @@ public slots:
                        const QString& tipoVehiculo = "");
     void animarEntregaSimple(const QString& origen, const QString& destino);
     void resetearMapa();
+    void zoomIn();
+    void zoomOut();
+    void centrarMapa();
 
 protected:
     void resizeEvent(QResizeEvent* event) override;
     void showEvent(QShowEvent* event) override;
+    void wheelEvent(QWheelEvent* event) override;
 
 private slots:
     void onTimerAnimacion();

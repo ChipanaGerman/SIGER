@@ -50,18 +50,28 @@ void GeneradorEventos::hiloGenerador() {
     std::uniform_int_distribution<int>     distTipo(0, 1);
     std::uniform_int_distribution<int>     distDias(1, 5);
 
-    // Calles representativas de Arequipa (nombres normalizados)
+    // 20 ubicaciones emblemáticas de Arequipa
     const std::vector<std::string> ubicaciones = {
         "Plaza de Armas",
-        "Av. Ejercito 450",
         "Calle Mercaderes 120",
-        "Av. Dolores 890",
-        "Urb. Umacollo B-12",
-        "Av. Cayma 310",
-        "Parque Industrial",
-        "Av. Lambramani 105",
         "Calle San Francisco 204",
-        "Av. Venezuela 800 (UNSA)"
+        "Mirador de Yanahuara",
+        "Av. Ejercito 450",
+        "Av. Cayma 310",
+        "Urb. Umacollo B-12",
+        "UNSA Ingenierias (Av. Independencia)",
+        "Av. Venezuela 800 (UNSA)",
+        "Av. Lambramani 105",
+        "Mall Aventura Porongoche",
+        "Av. Dolores 890",
+        "Plaza Mayta Capac (Miraflores)",
+        "Parque Selva Alegre",
+        "Mirador de Sachaca",
+        "Terminal Terrestre Arequipa",
+        "Cerro Colorado (Plaza Las Americas)",
+        "Parque Industrial",
+        "Plaza de Paucarpata",
+        "Molino de Sabandia"
     };
     std::uniform_int_distribution<size_t> distIdx(0, ubicaciones.size() - 1);
 

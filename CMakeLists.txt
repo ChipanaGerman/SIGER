@@ -50,6 +50,7 @@ add_executable(SIGER
     ${MODEL_SOURCES}
     ${CONTROLLER_SOURCES}
     ${VIEW_SOURCES}
+    resources.qrc
 )
 
 target_include_directories(SIGER PRIVATE

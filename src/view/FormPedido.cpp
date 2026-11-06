@@ -42,15 +42,25 @@ void FormPedido::setupUi() {
 
     const QStringList ubicaciones = {
         "Plaza de Armas",
-        "Av. Ejercito 450",
         "Calle Mercaderes 120",
-        "Av. Dolores 890",
-        "Urb. Umacollo B-12",
-        "Av. Cayma 310",
-        "Parque Industrial",
-        "Av. Lambramani 105",
         "Calle San Francisco 204",
-        "Av. Venezuela 800 (UNSA)"
+        "Mirador de Yanahuara",
+        "Av. Ejercito 450",
+        "Av. Cayma 310",
+        "Urb. Umacollo B-12",
+        "UNSA Ingenierias (Av. Independencia)",
+        "Av. Venezuela 800 (UNSA)",
+        "Av. Lambramani 105",
+        "Mall Aventura Porongoche",
+        "Av. Dolores 890",
+        "Plaza Mayta Capac (Miraflores)",
+        "Parque Selva Alegre",
+        "Mirador de Sachaca",
+        "Terminal Terrestre Arequipa",
+        "Cerro Colorado (Plaza Las Americas)",
+        "Parque Industrial",
+        "Plaza de Paucarpata",
+        "Molino de Sabandia"
     };
 
     m_cmbOrigen = new QComboBox(this);
