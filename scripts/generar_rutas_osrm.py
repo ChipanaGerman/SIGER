@@ -2,7 +2,7 @@
 """
 generar_rutas_osrm.py
 Calcula y cachea las rutas vehiculares reales (polilíneas calle a calle) entre
-los 20 nodos logísticos metropolitanos de Arequipa utilizando la API de OSRM
+los 30 nodos logísticos metropolitanos de Arequipa utilizando la API de OSRM
 (Open Source Routing Machine) y proyectándolas a las coordenadas de píxeles
 de la escena gráfica de SIGER (Web Mercator 1:1, 1536x1536 px).
 """
@@ -15,6 +15,7 @@ import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 NODES = {
+    # 20 Nodos iniciales
     "Plaza de Armas": (-71.5369, -16.3988),
     "Calle Mercaderes 120": (-71.5348, -16.3980),
     "Calle San Francisco 204": (-71.5350, -16.3958),
@@ -34,7 +35,19 @@ NODES = {
     "Cerro Colorado (Plaza Las Americas)": (-71.5598, -16.3655),
     "Parque Industrial": (-71.5845, -16.3548),
     "Plaza de Paucarpata": (-71.4985, -16.4328),
-    "Molino de Sabandia": (-71.4880, -16.4520)
+    "Molino de Sabandia": (-71.4880, -16.4520),
+
+    # 10 Nuevos Nodos Estratégicos Metropolitanos
+    "Monasterio de Santa Catalina": (-71.5372, -16.3952),
+    "Mercado San Camilo": (-71.5348, -16.4012),
+    "Hospital Regional Honorio Delgado": (-71.5285, -16.4115),
+    "Hospital Goyeneche": (-71.5272, -16.4018),
+    "Estadio Melgar (IV Centenario)": (-71.5318, -16.4055),
+    "Real Plaza Arequipa (Cayma)": (-71.5438, -16.3892),
+    "Plaza de Cayma (San Miguel)": (-71.5492, -16.3775),
+    "Plataforma Andres Avelino Caceres": (-71.5392, -16.4292),
+    "Balneario de Tingo": (-71.5542, -16.4285),
+    "Urb. Vallecito": (-71.5412, -16.4042)
 }
 
 ZOOM = 14
@@ -74,7 +87,6 @@ def query_osrm(orig_name, dest_name):
                     
                     for pt in coords:
                         sp = geo_to_scene(pt[1], pt[0])
-                        # Evitar puntos duplicados consecutivos
                         if not pts_escena or (pts_escena[-1] != sp):
                             pts_escena.append(sp)
                             
@@ -88,15 +100,15 @@ def query_osrm(orig_name, dest_name):
                         "duracion_s": round(route.get('duration', 0), 1),
                         "puntos": pts_escena
                     }
-        except Exception as e:
-            time.sleep(0.5 * (intento + 1))
+        except Exception:
+            time.sleep(0.4 * (intento + 1))
             
-    # Fallback si la API falló tras 3 intentos: línea recta conectada
+    # Fallback si la API falló tras 3 intentos
     p1 = geo_to_scene(lat1, lon1)
     p2 = geo_to_scene(lat2, lon2)
     return {
-        "distancia_m": 1000.0,
-        "duracion_s": 120.0,
+        "distancia_m": 1200.0,
+        "duracion_s": 150.0,
         "puntos": [p1, p2]
     }
 
@@ -130,10 +142,9 @@ def main():
         print("Todas las rutas ya están generadas.")
         return
 
-    # Consulta con pool concurrente de 3 trabajadores para no saturar OSRM
     completados = 0
     t0 = time.time()
-    with ThreadPoolExecutor(max_workers=3) as executor:
+    with ThreadPoolExecutor(max_workers=4) as executor:
         future_to_pair = {
             executor.submit(query_osrm, o, d): (o, d)
             for o, d in pairs_to_query
@@ -146,10 +157,9 @@ def main():
                 key = f"{o}|{d}"
                 rutas[key] = res
                 completados += 1
-                if completados % 25 == 0 or completados == len(pairs_to_query):
+                if completados % 35 == 0 or completados == len(pairs_to_query):
                     elapsed = time.time() - t0
                     print(f"Progreso: {completados}/{len(pairs_to_query)} rutas ({completados/len(pairs_to_query)*100:.1f}%) - {elapsed:.1f}s transcurridos")
-                    # Guardar progreso parcial
                     with open(output_path, "w", encoding="utf-8") as f:
                         json.dump(rutas, f, ensure_ascii=False)
             except Exception as exc:

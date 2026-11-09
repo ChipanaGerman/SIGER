@@ -163,6 +163,16 @@ void MapaView::inicializarNodos() {
     m_posiciones["Parque Industrial"]                   = QPointF(-483.9, -603.2);
     m_posiciones["Plaza de Paucarpata"]                 = QPointF(518.1, 344.1);
     m_posiciones["Molino de Sabandia"]                  = QPointF(640.4, 577.3);
+    m_posiciones["Monasterio de Santa Catalina"]        = QPointF(67.2, -112.6);
+    m_posiciones["Mercado San Camilo"]                  = QPointF(95.2, -39.7);
+    m_posiciones["Hospital Regional Honorio Delgado"]   = QPointF(168.6, 85.4);
+    m_posiciones["Hospital Goyeneche"]                  = QPointF(183.7, -32.4);
+    m_posiciones["Estadio Melgar (IV Centenario)"]      = QPointF(130.1, 12.5);
+    m_posiciones["Real Plaza Arequipa (Cayma)"]         = QPointF(-9.7, -185.5);
+    m_posiciones["Plaza de Cayma (San Miguel)"]         = QPointF(-72.6, -327.5);
+    m_posiciones["Plataforma Andres Avelino Caceres"]   = QPointF(43.9, 300.4);
+    m_posiciones["Balneario de Tingo"]                  = QPointF(-130.9, 291.9);
+    m_posiciones["Urb. Vallecito"]                      = QPointF(20.6, -3.3);
 
     // 3. Inicializar servicio de rutas viales reales (OSRM)
     ServicioRutas::instancia().inicializar();
@@ -240,22 +250,19 @@ void MapaView::animarEntrega(const QString& idPedido,
         puntos = { p1, p2 };
     }
 
-    // Configurar color, icono y velocidad de avance constante según el tipo de vehículo
+    // Configurar color e icono según el tipo de vehículo
     QColor colorRuta(251, 140, 0, 230); // Default naranja (Auto)
     QColor colorMovil(230, 81, 0);       // Naranja intenso
     QString icono = "🚗";
-    double velPxPorFrame = 2.0;          // Velocidad constante equilibrada (~7-9 seg)
 
     if (tipoVehiculo.contains("Moto", Qt::CaseInsensitive)) {
         colorRuta = QColor(2, 136, 209, 235);  // Celeste brillante
         colorMovil = QColor(1, 87, 155);       // Azul oscuro
         icono = "🏍️";
-        velPxPorFrame = 2.8;                   // Más rápida y ágil (~6 seg)
     } else if (tipoVehiculo.contains("Camion", Qt::CaseInsensitive) || tipoVehiculo.contains("Camión", Qt::CaseInsensitive)) {
         colorRuta = QColor(142, 36, 170, 235); // Púrpura
         colorMovil = QColor(106, 27, 154);     // Púrpura oscuro
         icono = "🚚";
-        velPxPorFrame = 1.4;                   // Más pesado y prudente (~11 seg)
     }
 
     // 2. Calcular distancias acumuladas a lo largo de la polilínea de calles
@@ -271,6 +278,24 @@ void MapaView::animarEntrega(const QString& idPedido,
     if (distTotal <= 0.001) {
         distTotal = 1.0;
     }
+
+    // Calcular velocidad constante sincronizada con la distancia real (OSRM)
+    // Permite que rutas largas completen todo el recorrido visualmente antes de finalizar
+    double distKm = ServicioRutas::instancia().calcularDistanciaKm(origen, destino);
+    if (distKm <= 0.2) distKm = 2.0;
+
+    double segs = 4.0;
+    if (tipoVehiculo.contains("Moto", Qt::CaseInsensitive)) {
+        segs = 4.0 + distKm * 1.0;
+    } else if (tipoVehiculo.contains("Camion", Qt::CaseInsensitive) || tipoVehiculo.contains("Camión", Qt::CaseInsensitive)) {
+        segs = 6.0 + distKm * 1.6;
+    } else {
+        segs = 5.0 + distKm * 1.3;
+    }
+
+    // Total de frames esperados en la animación gráfica (a 30ms/frame)
+    double totalFrames = (segs * 1000.0) / 30.0;
+    double velPxPorFrame = (totalFrames > 1.0) ? (distTotal / totalFrames) : 2.0;
 
     // 3. Trazar la polilínea de carretera estilo navegación GPS (Google Maps polyline)
     QPainterPath pathRuta;

@@ -71,7 +71,17 @@ void GeneradorEventos::hiloGenerador() {
         "Cerro Colorado (Plaza Las Americas)",
         "Parque Industrial",
         "Plaza de Paucarpata",
-        "Molino de Sabandia"
+        "Molino de Sabandia",
+        "Monasterio de Santa Catalina",
+        "Mercado San Camilo",
+        "Hospital Regional Honorio Delgado",
+        "Hospital Goyeneche",
+        "Estadio Melgar (IV Centenario)",
+        "Real Plaza Arequipa (Cayma)",
+        "Plaza de Cayma (San Miguel)",
+        "Plataforma Andres Avelino Caceres",
+        "Balneario de Tingo",
+        "Urb. Vallecito"
     };
     std::uniform_int_distribution<size_t> distIdx(0, ubicaciones.size() - 1);
 

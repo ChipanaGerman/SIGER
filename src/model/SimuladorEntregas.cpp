@@ -4,6 +4,8 @@
  */
 
 #include "SimuladorEntregas.h"
+#include "ServicioRutas.h"
+#include <QString>
 
 #include <algorithm>
 #include <chrono>
@@ -189,9 +191,28 @@ void SimuladorEntregas::hiloRepartidor(std::shared_ptr<Repartidor> rep) {
                                pedido->getId(),
                                "EN_CAMINO:" + pedido->getId() + ":" + rep->getId() + ":" + tipoVehiculo);
 
-            // 2. Simular el viaje con velocidad pausada y realista
-            // Moto: ~5.5s, Auto: ~7.5s, Camión: ~10s (a velocidad base 1000)
-            int duracionBaseMs = (tipoVehiculo == "Moto") ? 5500 : ((tipoVehiculo == "Auto") ? 7500 : 10000);
+            // 2. Simular el viaje con duración sincronizada y proporcional a la distancia real (OSRM)
+            double distKm = pedido->getDistanciaKm();
+            if (distKm <= 0.2) {
+                distKm = ServicioRutas::instancia().calcularDistanciaKm(
+                    QString::fromStdString(pedido->getOrigen()),
+                    QString::fromStdString(pedido->getDestino())
+                );
+            }
+            if (distKm <= 0.2) distKm = 2.0;
+
+            double segs = 4.0;
+            if (tipoVehiculo == "Moto") {
+                segs = 4.0 + distKm * 1.0;
+            } else if (tipoVehiculo == "Camion" || tipoVehiculo == "Camión") {
+                segs = 6.0 + distKm * 1.6;
+            } else {
+                segs = 5.0 + distKm * 1.3;
+            }
+
+            // Margen de 400ms para asegurar que el móvil gráfico llega al pin
+            // y se asienta visualmente antes de emitir la finalización del pedido
+            int duracionBaseMs = static_cast<int>((segs + 0.4) * 1000.0);
             double factorVelocidad = static_cast<double>(m_velocidadSimulacion) / 1000.0;
             int duracionMs = (m_velocidadSimulacion < 100)
                              ? 10
