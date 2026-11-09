@@ -1,5 +1,6 @@
 <!DOCTYPE RCC><RCC version="1.0">
 <qresource>
     <file>resources/mapa_arequipa.png</file>
+    <file>resources/rutas_arequipa.json</file>
 </qresource>
 </RCC>

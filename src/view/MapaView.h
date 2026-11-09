@@ -1,18 +1,20 @@
 #pragma once
 /**
  * @file MapaView.h
- * @brief Representación gráfica interactiva 2D del mapa de entregas con QGraphicsScene.
+ * @brief Representación gráfica interactiva 2D del mapa de entregas con QGraphicsScene y rutas viales reales.
  */
 
 #include <QWidget>
 #include <QGraphicsView>
 #include <QGraphicsScene>
 #include <QGraphicsEllipseItem>
-#include <QGraphicsLineItem>
+#include <QGraphicsPathItem>
 #include <QGraphicsTextItem>
+#include <QPainterPath>
 #include <QTimer>
 #include <QMap>
 #include <QPointF>
+#include <QVector>
 #include <QLabel>
 #include <vector>
 
@@ -58,13 +60,14 @@ private:
     QMap<QString, QPointF> m_posiciones;
 
     struct MovilAnimado {
-        QString idPedido;
-        QPointF origen;
-        QPointF destino;
-        double progreso{0.0};
-        double velocidad{0.015};
+        QString               idPedido;
+        QVector<QPointF>      rutaPuntos;
+        QVector<double>       distAcumulada;
+        double                longitudTotal{0.0};
+        double                distanciaRecorrida{0.0};
+        double                velocidadPixelesPorFrame{2.2};
         QGraphicsEllipseItem* item{nullptr};
-        QGraphicsLineItem*    linea{nullptr};
+        QGraphicsPathItem*    linea{nullptr};
         QGraphicsTextItem*    etiqueta{nullptr};
     };
     std::vector<MovilAnimado> m_moviles;

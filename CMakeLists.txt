@@ -26,6 +26,7 @@ set(MODEL_SOURCES
     src/model/VehiculoFactory.cpp
     src/model/Ruta.cpp
     src/model/Pedido.cpp
+    src/model/ServicioRutas.cpp
 )
 
 # ── Fuentes del Controlador ────────────────────────────────────────

@@ -1,9 +1,11 @@
 /**
  * @file MapaView.cpp
- * @brief Implementación de la vista de mapa interactivo con fondo urbano de Arequipa y QGraphicsScene.
+ * @brief Implementación de la vista de mapa interactivo con fondo urbano de Arequipa,
+ *        rutas vehiculares reales por calles y QGraphicsScene.
  */
 
 #include "MapaView.h"
+#include "ServicioRutas.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QPushButton>
@@ -32,7 +34,7 @@ void MapaView::setupUi() {
 
     // Barra de información y controles superiores estilo Google Maps
     auto topLayout = new QHBoxLayout();
-    m_lblInfo = new QLabel("🗺️ Red de Reparto Metropolitano Arequipa | Envíos activos: 0", this);
+    m_lblInfo = new QLabel("🗺️ Red de Reparto Metropolitano Arequipa (Rutas Viales OSRM) | Envíos activos: 0", this);
     m_lblInfo->setStyleSheet("font-weight: bold; font-size: 13px; color: #1A73E8; padding: 4px;");
     topLayout->addWidget(m_lblInfo);
     topLayout->addStretch();
@@ -121,7 +123,7 @@ void MapaView::showEvent(QShowEvent* event) {
 }
 
 void MapaView::inicializarNodos() {
-    // 1. Cargar fondo de mapa urbano real de Arequipa (OpenStreetMap / Google Maps)
+    // 1. Cargar fondo de mapa urbano real de Arequipa
     QPixmap mapaPix;
     if (QFile::exists(":/resources/mapa_arequipa.png")) {
         mapaPix.load(":/resources/mapa_arequipa.png");
@@ -137,7 +139,7 @@ void MapaView::inicializarNodos() {
         auto mapaItem = m_scene->addPixmap(mapaPix);
         mapaItem->setPos(-768, -768);
         mapaItem->setZValue(-100);
-        mapaItem->setOpacity(0.94); // Claridad óptima para que resalten las rutas
+        mapaItem->setOpacity(0.94);
     }
 
     // 2. 20 Nodos Logísticos de Arequipa georreferenciados con precisión métrica
@@ -162,8 +164,11 @@ void MapaView::inicializarNodos() {
     m_posiciones["Plaza de Paucarpata"]                 = QPointF(518.1, 344.1);
     m_posiciones["Molino de Sabandia"]                  = QPointF(640.4, 577.3);
 
-    // 3. Malla vial conectada (corredores logísticos con estilo sutil)
-    QPen penCalle(QColor(120, 144, 156, 140), 1.8, Qt::DashLine, Qt::RoundCap);
+    // 3. Inicializar servicio de rutas viales reales (OSRM)
+    ServicioRutas::instancia().inicializar();
+
+    // 4. Malla vial conectada sutil
+    QPen penCalle(QColor(120, 144, 156, 110), 1.6, Qt::DashLine, Qt::RoundCap);
     QList<QPointF> puntos = m_posiciones.values();
     for (int i = 0; i < puntos.size(); ++i) {
         for (int j = i + 1; j < puntos.size(); ++j) {
@@ -175,7 +180,7 @@ void MapaView::inicializarNodos() {
         }
     }
 
-    // 4. Dibujar pines de ubicación estilo Google Maps
+    // 5. Dibujar pines de ubicación estilo Google Maps
     QFont font("Segoe UI", 8, QFont::Bold);
 
     for (auto it = m_posiciones.begin(); it != m_posiciones.end(); ++it) {
@@ -190,13 +195,13 @@ void MapaView::inicializarNodos() {
         // Pin central tipo Google Maps
         auto pin = m_scene->addEllipse(pt.x() - 5.5, pt.y() - 5.5, 11, 11,
                                        QPen(Qt::white, 1.8),
-                                       QBrush(QColor(234, 67, 53))); // Rojo Google Maps para puntos clave
+                                       QBrush(QColor(234, 67, 53)));
         if (it.key().contains("UNSA") || it.key().contains("Plaza de Armas")) {
-            pin->setBrush(QBrush(QColor(26, 115, 232))); // Azul Google para sedes UNSA y centro
+            pin->setBrush(QBrush(QColor(26, 115, 232)));
         }
         pin->setZValue(2);
 
-        // Etiqueta estilo Google Maps "pill" con fondo blanco
+        // Etiqueta estilo Google Maps "pill" con fondo claro
         auto text = m_scene->addText(it.key(), font);
         text->setDefaultTextColor(QColor(32, 33, 36));
         text->setPos(pt.x() - 40, pt.y() + 8);
@@ -208,7 +213,6 @@ QPointF MapaView::getPunto(const QString& nombre) const {
     if (m_posiciones.contains(nombre)) {
         return m_posiciones[nombre];
     }
-    // Búsqueda flexible tolerante a tildes o variaciones de nombre
     for (auto it = m_posiciones.begin(); it != m_posiciones.end(); ++it) {
         if (it.key().contains(nombre.left(6), Qt::CaseInsensitive) ||
             nombre.contains(it.key().left(6), Qt::CaseInsensitive)) {
@@ -223,43 +227,70 @@ void MapaView::animarEntrega(const QString& idPedido,
                             const QString& destino,
                             const QString& repartidor,
                             const QString& tipoVehiculo) {
-    QPointF p1 = getPunto(origen);
-    QPointF p2 = getPunto(destino);
+    // 1. Obtener la ruta vial real por calles respetando la topología de Arequipa (OSRM)
+    auto rutaUrbana = ServicioRutas::instancia().obtenerRuta(origen, destino);
+    QVector<QPointF> puntos = rutaUrbana.waypoints;
 
-    if (p1 == p2) {
-        p2 = QPointF(p1.x() + 80, p1.y() + 60);
+    if (puntos.size() < 2) {
+        QPointF p1 = getPunto(origen);
+        QPointF p2 = getPunto(destino);
+        if (p1 == p2) {
+            p2 = QPointF(p1.x() + 80, p1.y() + 60);
+        }
+        puntos = { p1, p2 };
     }
 
-    // Configurar color, icono y velocidad según el tipo de vehículo
-    QColor colorRuta(251, 140, 0, 230); // Default naranja
-    QColor colorMovil(230, 81, 0);       // Default naranja intenso
+    // Configurar color, icono y velocidad de avance constante según el tipo de vehículo
+    QColor colorRuta(251, 140, 0, 230); // Default naranja (Auto)
+    QColor colorMovil(230, 81, 0);       // Naranja intenso
     QString icono = "🚗";
-    double velAnim = 0.0042;            // ~8 seg
+    double velPxPorFrame = 2.0;          // Velocidad constante equilibrada (~7-9 seg)
 
     if (tipoVehiculo.contains("Moto", Qt::CaseInsensitive)) {
         colorRuta = QColor(2, 136, 209, 235);  // Celeste brillante
         colorMovil = QColor(1, 87, 155);       // Azul oscuro
         icono = "🏍️";
-        velAnim = 0.0055;                      // ~6 seg
+        velPxPorFrame = 2.8;                   // Más rápida y ágil (~6 seg)
     } else if (tipoVehiculo.contains("Camion", Qt::CaseInsensitive) || tipoVehiculo.contains("Camión", Qt::CaseInsensitive)) {
         colorRuta = QColor(142, 36, 170, 235); // Púrpura
         colorMovil = QColor(106, 27, 154);     // Púrpura oscuro
         icono = "🚚";
-        velAnim = 0.0032;                      // ~10.5 seg
+        velPxPorFrame = 1.4;                   // Más pesado y prudente (~11 seg)
     }
 
-    // Línea activa de reparto con grosor y resplandor
-    QPen penRuta(colorRuta, 4.0, Qt::SolidLine, Qt::RoundCap);
-    auto linea = m_scene->addLine(QLineF(p1, p2), penRuta);
-    linea->setZValue(10);
+    // 2. Calcular distancias acumuladas a lo largo de la polilínea de calles
+    QVector<double> distAcum;
+    distAcum.reserve(puntos.size());
+    distAcum.push_back(0.0);
+    double distTotal = 0.0;
+    for (int i = 1; i < puntos.size(); ++i) {
+        double d = QLineF(puntos[i - 1], puntos[i]).length();
+        distTotal += d;
+        distAcum.push_back(distTotal);
+    }
+    if (distTotal <= 0.001) {
+        distTotal = 1.0;
+    }
 
-    // Móvil en movimiento (círculo llamativo con borde blanco)
-    auto movil = m_scene->addEllipse(p1.x() - 9, p1.y() - 9, 18, 18,
+    // 3. Trazar la polilínea de carretera estilo navegación GPS (Google Maps polyline)
+    QPainterPath pathRuta;
+    pathRuta.moveTo(puntos.first());
+    for (int i = 1; i < puntos.size(); ++i) {
+        pathRuta.lineTo(puntos[i]);
+    }
+
+    QPen penRuta(colorRuta, 4.5, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+    auto lineaPath = m_scene->addPath(pathRuta, penRuta);
+    lineaPath->setZValue(10);
+
+    // 4. Móvil en movimiento (inicia en el punto exacto de origen)
+    QPointF pInicio = puntos.first();
+    auto movil = m_scene->addEllipse(pInicio.x() - 9, pInicio.y() - 9, 18, 18,
                                      QPen(Qt::white, 2.5),
                                      QBrush(colorMovil));
     movil->setZValue(20);
 
-    // Etiqueta flotante con ID del pedido e icono del vehículo
+    // 5. Etiqueta flotante con ID del pedido e icono del vehículo
     QFont fontId("Segoe UI", 9, QFont::Bold);
     QString textoEtiqueta = idPedido.isEmpty() ? (icono + " En Ruta") : (icono + " " + idPedido);
     if (!repartidor.isEmpty()) {
@@ -267,22 +298,24 @@ void MapaView::animarEntrega(const QString& idPedido,
     }
     auto etiqueta = m_scene->addText(textoEtiqueta, fontId);
     etiqueta->setDefaultTextColor(colorMovil);
-    etiqueta->setPos(p1.x() - 25, p1.y() - 26);
+    etiqueta->setPos(pInicio.x() - 25, pInicio.y() - 26);
     etiqueta->setZValue(25);
 
+    // 6. Registrar en la lista de móviles activos
     MovilAnimado anim;
     anim.idPedido = idPedido;
-    anim.origen = p1;
-    anim.destino = p2;
-    anim.progreso = 0.0;
-    anim.velocidad = velAnim;
+    anim.rutaPuntos = puntos;
+    anim.distAcumulada = distAcum;
+    anim.longitudTotal = distTotal;
+    anim.distanciaRecorrida = 0.0;
+    anim.velocidadPixelesPorFrame = velPxPorFrame;
     anim.item = movil;
-    anim.linea = linea;
+    anim.linea = lineaPath;
     anim.etiqueta = etiqueta;
 
     m_moviles.push_back(anim);
 
-    m_lblInfo->setText(QString("🗺️ Red de Reparto Metropolitano Arequipa | Envíos activos: %1").arg(m_moviles.size()));
+    m_lblInfo->setText(QString("🗺️ Red de Reparto Metropolitano Arequipa (Rutas Viales OSRM) | Envíos activos: %1").arg(m_moviles.size()));
 }
 
 void MapaView::animarEntregaSimple(const QString& origen, const QString& destino) {
@@ -291,8 +324,9 @@ void MapaView::animarEntregaSimple(const QString& origen, const QString& destino
 
 void MapaView::onTimerAnimacion() {
     for (auto it = m_moviles.begin(); it != m_moviles.end();) {
-        it->progreso += it->velocidad;
-        if (it->progreso >= 1.0) {
+        it->distanciaRecorrida += it->velocidadPixelesPorFrame;
+        if (it->distanciaRecorrida >= it->longitudTotal) {
+            // Completó el trayecto por las calles
             m_scene->removeItem(it->item);
             m_scene->removeItem(it->linea);
             m_scene->removeItem(it->etiqueta);
@@ -301,14 +335,31 @@ void MapaView::onTimerAnimacion() {
             delete it->etiqueta;
             it = m_moviles.erase(it);
         } else {
-            double x = it->origen.x() + (it->destino.x() - it->origen.x()) * it->progreso;
-            double y = it->origen.y() + (it->destino.y() - it->origen.y()) * it->progreso;
-            it->item->setRect(x - 9, y - 9, 18, 18);
-            it->etiqueta->setPos(x - 25, y - 26);
+            // Movimiento cinemático uniforme a lo largo de las curvas y esquinas
+            double dRec = it->distanciaRecorrida;
+            const auto& distAcum = it->distAcumulada;
+            const auto& pts = it->rutaPuntos;
+
+            int segIdx = 0;
+            while (segIdx + 1 < distAcum.size() && distAcum[segIdx + 1] < dRec) {
+                segIdx++;
+            }
+
+            double dSeg = distAcum[segIdx + 1] - distAcum[segIdx];
+            double t = (dSeg > 1e-4) ? ((dRec - distAcum[segIdx]) / dSeg) : 0.0;
+            if (t < 0.0) t = 0.0;
+            if (t > 1.0) t = 1.0;
+
+            QPointF pA = pts[segIdx];
+            QPointF pB = pts[segIdx + 1];
+            QPointF posActual = pA + (pB - pA) * t;
+
+            it->item->setRect(posActual.x() - 9, posActual.y() - 9, 18, 18);
+            it->etiqueta->setPos(posActual.x() - 25, posActual.y() - 26);
             ++it;
         }
     }
-    m_lblInfo->setText(QString("🗺️ Red de Reparto Metropolitano Arequipa | Envíos activos: %1").arg(m_moviles.size()));
+    m_lblInfo->setText(QString("🗺️ Red de Reparto Metropolitano Arequipa (Rutas Viales OSRM) | Envíos activos: %1").arg(m_moviles.size()));
 }
 
 void MapaView::resetearMapa() {
@@ -321,7 +372,7 @@ void MapaView::resetearMapa() {
         delete m.etiqueta;
     }
     m_moviles.clear();
-    m_lblInfo->setText("🗺️ Red de Reparto Metropolitano Arequipa | Envíos activos: 0");
+    m_lblInfo->setText("🗺️ Red de Reparto Metropolitano Arequipa (Rutas Viales OSRM) | Envíos activos: 0");
 }
 
 } // namespace siger

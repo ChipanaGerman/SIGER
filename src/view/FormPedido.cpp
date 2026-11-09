@@ -4,6 +4,7 @@
  */
 
 #include "FormPedido.h"
+#include "ServicioRutas.h"
 #include <QVBoxLayout>
 #include <QFormLayout>
 #include <QGroupBox>
@@ -95,6 +96,17 @@ void FormPedido::setupUi() {
             m_cmbVehiculo->setCurrentIndex(2); // Camión
         }
     });
+
+    // Calcular automáticamente la distancia vial real (OSRM) al cambiar origen o destino
+    auto recalcularDistancia = [this]() {
+        QString o = m_cmbOrigen->currentText();
+        QString d = m_cmbDestino->currentText();
+        double km = ServicioRutas::instancia().calcularDistanciaKm(o, d);
+        m_spnDistancia->setValue(km);
+    };
+    connect(m_cmbOrigen, &QComboBox::currentTextChanged, this, recalcularDistancia);
+    connect(m_cmbDestino, &QComboBox::currentTextChanged, this, recalcularDistancia);
+    recalcularDistancia();
 
     m_btnRegistrar = new QPushButton("➕ Registrar Pedido", this);
     m_btnRegistrar->setStyleSheet("background-color: #0288D1; color: white; font-weight: bold; padding: 8px; border-radius: 4px;");

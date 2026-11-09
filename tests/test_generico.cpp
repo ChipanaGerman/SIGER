@@ -15,6 +15,7 @@
 #include "Ruta.h"
 #include "Pedido.h"
 #include "PaqueteEstandar.h"
+#include "ServicioRutas.h"
 
 using namespace siger;
 
@@ -128,6 +129,33 @@ void test_ruta_template() {
     ASSERT_TRUE(rutaFloat.calcularDistanciaTotal() > 1.4f, "Distancia float calculada correctamente");
 }
 
+void test_servicio_rutas_osrm() {
+    std::cout << "\n=== Test: ServicioRutas (Singleton & Topologia Vial OSRM) ===\n";
+
+    auto& servicio = ServicioRutas::instancia();
+    if (servicio.cantidadRutas() == 0) {
+        servicio.inicializar("../resources/rutas_arequipa.json");
+    }
+
+    ASSERT_TRUE(servicio.cantidadRutas() > 0, "Repositorio de rutas viales cargado en memoria");
+    ASSERT_TRUE(servicio.tieneRuta("Plaza de Armas", "Mall Aventura Porongoche"), "Ruta Plaza de Armas -> Mall Aventura existe");
+
+    auto ruta = servicio.obtenerRuta("Plaza de Armas", "Mall Aventura Porongoche");
+    ASSERT_TRUE(ruta.encontrada, "Ruta vial encontrada en el repositorio");
+    ASSERT_TRUE(ruta.waypoints.size() > 20, "Ruta contiene mas de 20 waypoints detallados por calles");
+    ASSERT_TRUE(ruta.distanciaMetros > 4000.0, "Distancia de conduccion es mayor a 4000m");
+
+    double distKm = servicio.calcularDistanciaKm("Plaza de Armas", "Mall Aventura Porongoche");
+    ASSERT_TRUE(distKm > 4.0 && distKm < 6.0, "Distancia calculada en km es coherente (~4.6 km)");
+
+    double durMin = servicio.calcularDuracionMin("Plaza de Armas", "Mall Aventura Porongoche");
+    ASSERT_TRUE(durMin > 5.0 && durMin < 15.0, "Duracion estimada es coherente (~9 min)");
+
+    // Tolerancia a busquedas no existentes
+    auto noExiste = servicio.obtenerRuta("Lugar Inexistente", "Otro Desconocido");
+    ASSERT_TRUE(!noExiste.encontrada, "Ruta inexistente reportada correctamente como no encontrada");
+}
+
 int main() {
     std::cout << "╔══════════════════════════════════════════╗\n";
     std::cout << "║   SIGER — Tests Genericos & STL          ║\n";
@@ -136,6 +164,7 @@ int main() {
     test_cola_generica();
     test_repositorio_generico();
     test_ruta_template();
+    test_servicio_rutas_osrm();
 
     std::cout << "\n────────────────────────────────────────────\n";
     std::cout << "Resultados: " << testsPasados << " pasados, "
