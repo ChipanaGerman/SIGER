@@ -36,6 +36,7 @@ public slots:
                        const QString& tipoVehiculo = "");
     void animarEntregaSimple(const QString& origen, const QString& destino);
     void resetearMapa();
+    void setFactorVelocidad(double factor);
     void zoomIn();
     void zoomOut();
     void centrarMapa();
@@ -59,6 +60,7 @@ private:
     QLabel*         m_lblInfo{nullptr};
 
     QMap<QString, QPointF> m_posiciones;
+    double                 m_factorVelocidad{1.0};
 
     struct MovilAnimado {
         QString                 idPedido;

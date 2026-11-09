@@ -48,13 +48,14 @@ void ControlPanel::setupUi() {
 
     // Slider de velocidad
     grpLayout->addSpacing(10);
-    m_lblVelocidad = new QLabel("Velocidad: 1000 ms/paso", this);
+    m_lblVelocidad = new QLabel("Velocidad: 1.0x (Normal)", this);
     grpLayout->addWidget(m_lblVelocidad);
 
     m_sliderVelocidad = new QSlider(Qt::Horizontal, this);
-    m_sliderVelocidad->setRange(100, 3000);
+    m_sliderVelocidad->setRange(250, 2000);
     m_sliderVelocidad->setValue(1000);
-    m_sliderVelocidad->setSingleStep(100);
+    m_sliderVelocidad->setSingleStep(250);
+    m_sliderVelocidad->setToolTip("Ajusta el multiplicador de tiempo de la simulación (cámara rápida/normal)");
     grpLayout->addWidget(m_sliderVelocidad);
 
     grpLayout->addStretch();
@@ -97,6 +98,16 @@ void ControlPanel::onBtnPausarClicked() {
     }
 }
 
+void ControlPanel::slotSimulacionTerminada() {
+    m_btnIniciar->setEnabled(true);
+    m_btnPausar->setEnabled(false);
+    m_btnDetener->setEnabled(false);
+    m_btnPausar->setText("⏸ Pausar");
+    m_enPausa = false;
+
+    setEstadoSimulacion("COMPLETADO / LISTO", "#2E7D32");
+}
+
 void ControlPanel::onBtnDetenerClicked() {
     m_btnIniciar->setEnabled(true);
     m_btnPausar->setEnabled(false);
@@ -109,7 +120,17 @@ void ControlPanel::onBtnDetenerClicked() {
 }
 
 void ControlPanel::onSliderVelocidadChanged(int val) {
-    m_lblVelocidad->setText(QString("Velocidad: %1 ms/paso").arg(val));
+    double factor = 1000.0 / static_cast<double>(val);
+    QString desc = "Normal";
+    if (factor > 2.5) {
+        desc = "Ultra Rápido";
+    } else if (factor > 1.2) {
+        desc = "Rápido";
+    } else if (factor < 0.8) {
+        desc = "Lento";
+    }
+
+    m_lblVelocidad->setText(QString("Velocidad: %1x (%2)").arg(factor, 0, 'f', 1).arg(desc));
     emit sigVelocidadCambiada(val);
 }
 

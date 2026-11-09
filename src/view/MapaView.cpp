@@ -300,8 +300,9 @@ void MapaView::animarEntrega(const QString& idPedido,
         segs = 5.0 + distKm * 1.3;
     }
 
-    // Total de frames esperados en la animación gráfica (a 30ms/frame)
-    double totalFrames = (segs * 1000.0) / 30.0;
+    // Total de frames esperados en la animación gráfica (a 30ms/frame), sincronizados con factor de velocidad
+    double duracionSegs = segs * m_factorVelocidad;
+    double totalFrames = (duracionSegs * 1000.0) / 30.0;
     double velPxPorFrame = (totalFrames > 1.0) ? (distTotal / totalFrames) : 2.0;
 
     // 3. Trazar la polilínea de carretera estilo navegación GPS (bicolor: pendiente en punteado translúcido)
@@ -457,6 +458,12 @@ void MapaView::resetearMapa() {
     }
     m_moviles.clear();
     m_lblInfo->setText("🗺️ Red de Reparto Metropolitano Arequipa (Rutas Viales OSRM) | Envíos activos: 0");
+}
+
+void MapaView::setFactorVelocidad(double factor) {
+    if (factor > 0.05) {
+        m_factorVelocidad = factor;
+    }
 }
 
 } // namespace siger

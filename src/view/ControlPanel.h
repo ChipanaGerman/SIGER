@@ -20,6 +20,7 @@ public:
 
 public slots:
     void setEstadoSimulacion(const QString& estado, const QString& colorHex = "#2196F3");
+    void slotSimulacionTerminada();
 
 signals:
     void sigIniciar();

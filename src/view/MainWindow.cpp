@@ -156,7 +156,11 @@ void MainWindow::conectarSignalsSlots() {
             m_simulacionCtrl.get(), &SimulacionController::slotDetener);
 
     connect(m_controlPanel, &ControlPanel::sigVelocidadCambiada,
-            m_simulacionCtrl.get(), &SimulacionController::slotSetVelocidad);
+            this, [this](int ms) {
+                m_simulacionCtrl->slotSetVelocidad(ms);
+                double factor = static_cast<double>(ms) / 1000.0;
+                m_mapaView->setFactorVelocidad(factor);
+            });
 
     connect(m_simulacionCtrl.get(), &SimulacionController::simulacionIniciada,
             this, [this]() {
@@ -164,18 +168,25 @@ void MainWindow::conectarSignalsSlots() {
             });
 
     connect(m_simulacionCtrl.get(), &SimulacionController::simulacionDetenida,
+            m_controlPanel, &ControlPanel::slotSimulacionTerminada);
+
+    connect(m_simulacionCtrl.get(), &SimulacionController::simulacionDetenida,
             this, [this]() {
-                statusBar()->showMessage("Simulación detenida.");
+                statusBar()->showMessage("Simulación detenida / lista para nuevos pedidos.");
                 m_mapaView->resetearMapa();
             });
 
     connect(m_simulacionCtrl.get(), &SimulacionController::todosCompletados,
+            m_controlPanel, &ControlPanel::slotSimulacionTerminada);
+
+    connect(m_simulacionCtrl.get(), &SimulacionController::todosCompletados,
             this, [this]() {
-                statusBar()->showMessage("✅ ¡Todos los pedidos completados! Simulación finalizada automáticamente.");
+                statusBar()->showMessage("✅ ¡Todos los pedidos completados! Puedes agregar más pedidos e iniciar otra simulación.");
                 QMessageBox::information(this, "Simulación completada",
-                    "<b>¡Todas las entregas han sido completadas!</b><br>"
-                    "La simulación se ha detenido automáticamente.<br><br>"
-                    "Revisa las estadísticas para ver el resumen final.");
+                    "<b>¡Todas las entregas han sido completadas con éxito!</b><br>"
+                    "La simulación ha finalizado.<br><br>"
+                    "El sistema está listo: puedes registrar nuevos pedidos en el panel derecho "
+                    "y pulsar <b>▶ Iniciar Simulación</b> nuevamente sin necesidad de reiniciar el programa.");
             });
 }
 
