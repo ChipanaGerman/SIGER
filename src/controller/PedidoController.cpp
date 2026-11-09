@@ -122,9 +122,13 @@ void PedidoController::slotAgregarPedido(const QString& tipo,
         );
     }
 
-    // Normalizar tipo de vehículo requerido
-    std::string vehiculoReq = "Auto";
-    if (tipoVehiculo.contains("Moto", Qt::CaseInsensitive)) {
+    // Normalizar tipo de vehículo requerido (o flexible para auto-asignación inteligente)
+    std::string vehiculoReq = "";
+    if (tipoVehiculo.contains("Auto-asignación", Qt::CaseInsensitive) ||
+        tipoVehiculo.contains("Cualquiera", Qt::CaseInsensitive) ||
+        tipoVehiculo.contains("Flexible", Qt::CaseInsensitive)) {
+        vehiculoReq = ""; // Flexible: cualquier vehículo con capacidad suficiente puede transportarlo
+    } else if (tipoVehiculo.contains("Moto", Qt::CaseInsensitive)) {
         vehiculoReq = (peso <= 15.0) ? "Moto" : ((peso <= 100.0) ? "Auto" : "Camion");
     } else if (tipoVehiculo.contains("Camion", Qt::CaseInsensitive) || tipoVehiculo.contains("Camión", Qt::CaseInsensitive)) {
         vehiculoReq = "Camion";

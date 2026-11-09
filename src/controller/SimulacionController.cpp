@@ -24,7 +24,17 @@ void SimulacionController::onEvento(const DatoEvento& evento) {
     } else if (evento.tipo == EventoSiger::SIMULACION_DETENIDA) {
         emit simulacionDetenida();
     } else if (evento.tipo == EventoSiger::PEDIDO_COMPLETADO) {
-        emit entregaCompletada(QString::fromStdString(evento.idEntidad), "");
+        std::string repId = "";
+        const std::string& desc = evento.descripcion;
+        // La descripción tiene formato "PEDIDO_COMPLETADO:<idPedido>:<idRepartidor>"
+        auto p1 = desc.find(':');
+        if (p1 != std::string::npos) {
+            auto p2 = desc.find(':', p1 + 1);
+            if (p2 != std::string::npos) {
+                repId = desc.substr(p2 + 1);
+            }
+        }
+        emit entregaCompletada(QString::fromStdString(evento.idEntidad), QString::fromStdString(repId));
     } else if (evento.tipo == EventoSiger::TODOS_COMPLETADOS) {
         // Detener simulación automáticamente y notificar a la GUI
         if (m_simulador && m_simulador->isCorriendo()) {

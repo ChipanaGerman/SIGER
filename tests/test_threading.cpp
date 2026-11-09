@@ -145,6 +145,67 @@ void test_simulador_multithread() {
     ASSERT_TRUE(obs->conteoEventos.load() > 0, "Observer recibio notificaciones de eventos concurrentes");
 }
 
+void test_distribucion_equitativa_flota() {
+    std::cout << "\n=== Test: Distribución Concurrente entre Múltiples Repartidores ===\n";
+
+    auto cola = std::make_shared<Cola<std::shared_ptr<Pedido>>>();
+    auto simulador = std::make_shared<SimuladorEntregas>(cola);
+
+    // 3 repartidores con vehículos de distinto tipo y capacidad
+    auto moto1 = std::make_shared<Moto>("M1", "MTO-01", 15.0);
+    auto moto2 = std::make_shared<Moto>("M2", "MTO-02", 15.0);
+    auto auto1 = std::make_shared<Auto>("A1", "AUT-01", 100.0);
+
+    auto rep1 = std::make_shared<Repartidor>("R1", "Carlos Quispe", moto1);
+    auto rep2 = std::make_shared<Repartidor>("R2", "Lucía Torres", moto2);
+    auto rep3 = std::make_shared<Repartidor>("R3", "María Flores", auto1);
+
+    simulador->agregarRepartidor(rep1);
+    simulador->agregarRepartidor(rep2);
+    simulador->agregarRepartidor(rep3);
+
+    simulador->setVelocidad(10); // Simulación ultrarrápida para test unitario
+
+    // Encolar 9 pedidos (como en el escenario reportado por el usuario)
+    const int totalPedidos = 9;
+    for (int i = 1; i <= totalPedidos; ++i) {
+        auto paq = std::make_shared<PaqueteEstandar>("P" + std::to_string(i), "Paquete Test", 2.0, "Destino");
+        // Con auto-asignación inteligente (cadena vacía o Auto-asignación), cualquier unidad compatible puede tomarlo
+        auto ped = std::make_shared<Pedido>("PED-" + std::to_string(i), paq, "Origen", "Destino", 1.0, "");
+        cola->push(ped);
+    }
+
+    ASSERT_EQ(cola->size(), totalPedidos, "Cola contiene los 9 pedidos iniciales");
+
+    simulador->iniciar();
+
+    int intentos = 0;
+    while (!cola->isEmpty() && intentos < 80) {
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        ++intentos;
+    }
+
+    // Esperar a que los últimos pedidos en tránsito se completen
+    std::this_thread::sleep_for(std::chrono::milliseconds(300));
+
+    simulador->detener();
+
+    int e1 = rep1->getTotalEntregasCompletadas();
+    int e2 = rep2->getTotalEntregasCompletadas();
+    int e3 = rep3->getTotalEntregasCompletadas();
+    int totalEntregadas = e1 + e2 + e3;
+
+    std::cout << "  -> Repartidor 1 (Moto 1): " << e1 << " entregas\n";
+    std::cout << "  -> Repartidor 2 (Moto 2): " << e2 << " entregas\n";
+    std::cout << "  -> Repartidor 3 (Auto 1): " << e3 << " entregas\n";
+
+    ASSERT_TRUE(e1 > 0, "Repartidor 1 atendió pedidos");
+    ASSERT_TRUE(e2 > 0, "Repartidor 2 atendió pedidos en paralelo");
+    ASSERT_TRUE(e3 > 0, "Repartidor 3 (Auto) apoyó con pedidos compatibles");
+    ASSERT_TRUE(e1 < totalPedidos, "Ningún conductor monopolizó el 100% de los 9 pedidos");
+    ASSERT_EQ(totalEntregadas, totalPedidos, "Todos los 9 pedidos fueron distribuidos y completados exitosamente");
+}
+
 int main() {
     std::cout << "╔══════════════════════════════════════════╗\n";
     std::cout << "║   SIGER — Tests MultiThreading & Concurr ║\n";
@@ -152,6 +213,7 @@ int main() {
 
     test_concurrencia_cola();
     test_simulador_multithread();
+    test_distribucion_equitativa_flota();
 
     std::cout << "\n────────────────────────────────────────────\n";
     std::cout << "Resultados: " << testsPasados << " pasados, "

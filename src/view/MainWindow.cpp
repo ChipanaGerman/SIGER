@@ -24,21 +24,34 @@ MainWindow::MainWindow(std::shared_ptr<PedidoController> pedidoCtrl,
 
 void MainWindow::setupUi() {
     setWindowTitle("SIGER — Sistema Integrado de Gestión y Simulación de Entregas Rápidas");
-    resize(1280, 820);
+    resize(1340, 860);
 
-    // Widget central con pestañas
-    m_tabWidget = new QTabWidget(this);
-    m_dashboardView = new DashboardView(this);
+    // ── Centro de Control Unificado (Cockpit Dashboard) ───────────────
+    // Usamos un QSplitter vertical para que el Mapa de Arequipa esté siempre
+    // visible en la parte superior y el panel de supervisión (tabla, flota, métricas)
+    // esté visible en la parte inferior de manera simultánea sin fatiga de pestañas.
+    m_splitterPrincipal = new QSplitter(Qt::Vertical, this);
+    m_splitterPrincipal->setChildrenCollapsible(false);
+
     m_mapaView = new MapaView(this);
+    m_dashboardView = new DashboardView(this);
     m_flotaView = new FlotaView(this);
     m_estadisticasView = new EstadisticasView(this);
 
-    m_tabWidget->addTab(m_dashboardView, "📋 Dashboard de Pedidos");
-    m_tabWidget->addTab(m_mapaView, "🗺️ Mapa Interactivo");
-    m_tabWidget->addTab(m_flotaView, "🚚 Monitoreo de Flota");
-    m_tabWidget->addTab(m_estadisticasView, "📊 Estadísticas y Gráficos");
+    // 1. Zona Superior: Mapa Interactivo en Vivo
+    m_splitterPrincipal->addWidget(m_mapaView);
 
-    setCentralWidget(m_tabWidget);
+    // 2. Zona Inferior: Panel de Supervisión Multi-vista
+    m_tabPanelInferior = new QTabWidget(this);
+    m_tabPanelInferior->addTab(m_dashboardView, "📋 Pedidos Activos (Dashboard)");
+    m_tabPanelInferior->addTab(m_flotaView, "🚚 Monitoreo de Flota");
+    m_tabPanelInferior->addTab(m_estadisticasView, "📊 Estadísticas y Gráficos");
+    m_splitterPrincipal->addWidget(m_tabPanelInferior);
+
+    // Proporciones iniciales: 520px para el Mapa (62%), 320px para la Supervisión (38%)
+    m_splitterPrincipal->setSizes({520, 320});
+
+    setCentralWidget(m_splitterPrincipal);
 
     // Dock izquierdo: Panel de Control
     auto dockControl = new QDockWidget("Controles", this);
@@ -74,12 +87,24 @@ void MainWindow::setupUi() {
         if (m_simulacionCtrl) m_simulacionCtrl->slotDetener();
     });
 
+    auto menuVer = menuBar()->addMenu("&Ver");
+    auto actTogglePanel = menuVer->addAction("🔲 Alternar Panel Inferior (Maximizar Mapa)");
+    actTogglePanel->setShortcut(QKeySequence("F10"));
+    connect(actTogglePanel, &QAction::triggered, this, &MainWindow::slotTogglePanelInferior);
+
     auto menuAyuda = menuBar()->addMenu("A&yuda");
     auto actAcercaDe = menuAyuda->addAction("Acerca de SIGER");
     connect(actAcercaDe, &QAction::triggered, this, &MainWindow::onAcercaDe);
 
     // Barra de estado
-    statusBar()->showMessage("SIGER Listo. Universidad Nacional de San Agustín (UNSA) - Tecnología de Objetos");
+    statusBar()->showMessage("SIGER Listo. Centro de Control Unificado — UNSA Tecnología de Objetos");
+}
+
+void MainWindow::slotTogglePanelInferior() {
+    if (m_tabPanelInferior) {
+        bool visible = m_tabPanelInferior->isVisible();
+        m_tabPanelInferior->setVisible(!visible);
+    }
 }
 
 void MainWindow::conectarSignalsSlots() {

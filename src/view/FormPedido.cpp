@@ -92,23 +92,26 @@ void FormPedido::setupUi() {
     formLayout->addRow("Distancia Est.:", m_spnDistancia);
 
     m_cmbVehiculo = new QComboBox(this);
-    m_cmbVehiculo->addItem("Moto (hasta 15kg)");
-    m_cmbVehiculo->addItem("Auto (hasta 100kg)");
-    m_cmbVehiculo->addItem("Camión (hasta 2000kg)");
+    m_cmbVehiculo->addItem("Auto-asignación inteligente (Cualquier vehículo disponible)");
+    m_cmbVehiculo->addItem("Moto exclusiva (hasta 15kg)");
+    m_cmbVehiculo->addItem("Auto exclusivo (hasta 100kg)");
+    m_cmbVehiculo->addItem("Camión exclusivo (hasta 2000kg)");
     formLayout->addRow("Vehículo Sugerido:", m_cmbVehiculo);
 
     m_lblCosto = new QLabel("S/. 0.00", this);
     m_lblCosto->setStyleSheet("font-weight: bold; font-size: 14px; color: #2E7D32; background: #E8F5E9; padding: 4px 8px; border-radius: 4px;");
     formLayout->addRow("Tarifa Estimada:", m_lblCosto);
 
-    // Ajustar vehículo sugerido según el peso automáticamente
+    // Ajustar vehículo sugerido según el peso automáticamente (si no está en auto-asignación)
     connect(m_spnPeso, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, [this](double val) {
-        if (val <= 15.0) {
-            m_cmbVehiculo->setCurrentIndex(0); // Moto
-        } else if (val <= 100.0) {
-            m_cmbVehiculo->setCurrentIndex(1); // Auto
-        } else {
-            m_cmbVehiculo->setCurrentIndex(2); // Camión
+        if (m_cmbVehiculo->currentIndex() != 0) {
+            if (val <= 15.0) {
+                m_cmbVehiculo->setCurrentIndex(1); // Moto
+            } else if (val <= 100.0) {
+                m_cmbVehiculo->setCurrentIndex(2); // Auto
+            } else {
+                m_cmbVehiculo->setCurrentIndex(3); // Camión
+            }
         }
         actualizarEstimaciones();
     });
@@ -191,6 +194,7 @@ void FormPedido::onBtnRegistrarClicked() {
 
     m_txtDescripcion->clear();
     m_spnPeso->setValue(2.0);
+    m_cmbVehiculo->setCurrentIndex(0); // Volver a auto-asignación por defecto
 }
 
 } // namespace siger

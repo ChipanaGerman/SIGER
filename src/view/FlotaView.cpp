@@ -124,11 +124,14 @@ void FlotaView::slotPedidoEnCamino(const QString& idPedido,
                                    const QString& repartidor,
                                    const QString& tipoVehiculo) {
     Q_UNUSED(tipoVehiculo);
+    QString repLimpio = repartidor.trimmed();
+    if (repLimpio.isEmpty()) return;
 
-    // Búsqueda del repartidor por ID o nombre
+    // Búsqueda del repartidor por ID exacto o coincidencia de nombre
     for (auto it = m_vehiculos.begin(); it != m_vehiculos.end(); ++it) {
-        if (it.key() == repartidor || it.value().nombreRepartidor.contains(repartidor, Qt::CaseInsensitive) ||
-            repartidor.contains(it.key(), Qt::CaseInsensitive)) {
+        if (it.key().compare(repLimpio, Qt::CaseInsensitive) == 0 ||
+            it.value().nombreRepartidor.contains(repLimpio, Qt::CaseInsensitive) ||
+            repLimpio.contains(it.key(), Qt::CaseInsensitive)) {
             it->enRuta = true;
             it->lblEstado->setText("🟠 EN RUTA");
             it->lblEstado->setStyleSheet("background: #FFF3E0; color: #E65100; font-weight: bold; padding: 3px 8px; border-radius: 4px; font-size: 11px;");
@@ -142,10 +145,13 @@ void FlotaView::slotPedidoEnCamino(const QString& idPedido,
 
 void FlotaView::slotPedidoCompletado(const QString& idPedido, const QString& repartidor) {
     Q_UNUSED(idPedido);
+    QString repLimpio = repartidor.trimmed();
+    if (repLimpio.isEmpty()) return;
 
     for (auto it = m_vehiculos.begin(); it != m_vehiculos.end(); ++it) {
-        if (it.key() == repartidor || it.value().nombreRepartidor.contains(repartidor, Qt::CaseInsensitive) ||
-            repartidor.contains(it.key(), Qt::CaseInsensitive)) {
+        if (it.key().compare(repLimpio, Qt::CaseInsensitive) == 0 ||
+            it.value().nombreRepartidor.contains(repLimpio, Qt::CaseInsensitive) ||
+            repLimpio.contains(it.key(), Qt::CaseInsensitive)) {
             it->enRuta = false;
             it->pedidosCompletados++;
             it->lblEstado->setText("🟢 DISPONIBLE");

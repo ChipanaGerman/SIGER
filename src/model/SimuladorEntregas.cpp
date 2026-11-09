@@ -63,6 +63,8 @@ void SimuladorEntregas::iniciar() {
         }
     }
 
+    m_condVar.notify_all();
+
     notificarObservers(EventoSiger::SIMULACION_INICIADA, "", "Simulación iniciada");
 }
 
@@ -162,6 +164,9 @@ void SimuladorEntregas::hiloRepartidor(std::shared_ptr<Repartidor> rep) {
                 continue;
             }
             pedido = std::move(optPedido.value());
+
+            // Notificar inmediatamente a otros hilos repartidores para que tomen pedidos en paralelo
+            m_condVar.notify_all();
         }
 
         if (!pedido) continue;
@@ -173,7 +178,7 @@ void SimuladorEntregas::hiloRepartidor(std::shared_ptr<Repartidor> rep) {
                 auto ahora = std::chrono::steady_clock::now();
                 auto transcurridoMs = std::chrono::duration_cast<std::chrono::milliseconds>(ahora - m_ultimoDespacho).count();
                 // A velocidad de prueba unitaria (ms < 100), no retardamos
-                int delayEscalon = (m_velocidadSimulacion < 100) ? 0 : 1200;
+                int delayEscalon = (m_velocidadSimulacion < 100) ? 0 : 700;
                 if (transcurridoMs < delayEscalon && m_ultimoDespacho.time_since_epoch().count() > 0) {
                     int espera = delayEscalon - static_cast<int>(transcurridoMs);
                     std::this_thread::sleep_for(std::chrono::milliseconds(espera));
@@ -268,6 +273,9 @@ void SimuladorEntregas::hiloRepartidor(std::shared_ptr<Repartidor> rep) {
         // Despertar a otros hilos repartidores: una unidad ha regresado
         // y puede haber pedidos pendientes en espera de su tipo de vehículo
         m_condVar.notify_all();
+
+        // Pequeño descanso voluntario (50ms) para ceder turno y asegurar balanceo entre conductores
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
 }
 

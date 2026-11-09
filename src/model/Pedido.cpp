@@ -46,11 +46,14 @@ bool Pedido::esCompatibleCon(const std::string& tipoVehiculo, double capacidadKg
     if (peso > capacidadKg) {
         return false;
     }
-    // Si se exigió un vehículo específico (desde GUI), debe coincidir exactamente
-    if (!m_tipoVehiculoRequerido.empty()) {
+    // Si se exigió un vehículo exclusivo y específico, debe coincidir exactamente
+    if (!m_tipoVehiculoRequerido.empty() &&
+        m_tipoVehiculoRequerido != "Auto-asignación" &&
+        m_tipoVehiculoRequerido != "Flexible" &&
+        m_tipoVehiculoRequerido != "Cualquiera") {
         return m_tipoVehiculoRequerido == tipoVehiculo;
     }
-    // Si no se exigió explícitamente (tests unitarios), cualquier vehículo con capacidad basta
+    // Si no se exigió exclusividad, cualquier vehículo con capacidad suficiente puede transportarlo
     return true;
 }
 

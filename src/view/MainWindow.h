@@ -1,12 +1,13 @@
 #pragma once
 /**
  * @file MainWindow.h
- * @brief Ventana principal de la aplicación SIGER.
+ * @brief Ventana principal de la aplicación SIGER con Centro de Control Unificado (Cockpit).
  */
 
 #include <QMainWindow>
 #include <QTabWidget>
 #include <QDockWidget>
+#include <QSplitter>
 #include <memory>
 
 #include "PedidoController.h"
@@ -30,6 +31,7 @@ public:
 
 private slots:
     void onAcercaDe();
+    void slotTogglePanelInferior();
 
 private:
     void setupUi();
@@ -38,7 +40,8 @@ private:
     std::shared_ptr<PedidoController>     m_pedidoCtrl;
     std::shared_ptr<SimulacionController> m_simulacionCtrl;
 
-    QTabWidget*       m_tabWidget{nullptr};
+    QSplitter*        m_splitterPrincipal{nullptr};
+    QTabWidget*       m_tabPanelInferior{nullptr};
     DashboardView*    m_dashboardView{nullptr};
     MapaView*         m_mapaView{nullptr};
     class FlotaView*  m_flotaView{nullptr};
