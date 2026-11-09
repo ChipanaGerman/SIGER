@@ -44,6 +44,9 @@ public:
     void setEstado(EstadoPedido estado)         { m_estado = estado; }
     void setRepartidorId(const std::string& id) { m_repartidorId = id; }
 
+    double                        getCostoEnvio()  const { return m_costoEnvio; }
+    void                          setCostoEnvio(double costo) { m_costoEnvio = costo; }
+
     std::string getEstadoStr() const;
     int getPrioridad() const;  // delega al paquete
 
@@ -53,6 +56,7 @@ private:
     std::string              m_origen;
     std::string              m_destino;
     double                   m_distanciaKm;
+    double                   m_costoEnvio{0.0};
     EstadoPedido             m_estado { EstadoPedido::NUEVO };
     std::string              m_repartidorId;
     std::string              m_tipoVehiculoRequerido;

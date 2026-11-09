@@ -19,6 +19,7 @@
 #include "PaqueteFragil.h"
 #include "Repartidor.h"
 #include "Pedido.h"
+#include "IEstrategiaTarifa.h"
 
 using namespace siger;
 
@@ -167,6 +168,35 @@ void test_prioridad_urgente() {
                 "Frágil de alto valor alcanza prioridad máxima 10");
 }
 
+// ── Test 6: Patrón Strategy (GoF) en Tarifas ─────────────────────────
+void test_estrategias_tarifa_strategy() {
+    std::cout << "\n=== Test: Patrón Strategy (GoF) para Tarifas ===\n";
+
+    TarifaEstandarStrategy estrategiaEstandar;
+    TarifaFragilStrategy   estrategiaFragil;
+    TarifaPesadaStrategy   estrategiaPesada;
+
+    // Distancia: 10 km, Peso: 4 kg, no frágil
+    double costoEst = estrategiaEstandar.calcularTarifa(10.0, 4.0, false);
+    ASSERT_NEAR(costoEst, 4.00 + 10.0 * 1.20, 0.01, "Tarifa estándar calculada correctamente (S/. 16.00)");
+
+    // Frágil con seguro
+    double costoFra = estrategiaFragil.calcularTarifa(10.0, 4.0, true);
+    ASSERT_TRUE(costoFra > costoEst, "Tarifa frágil con póliza es mayor a estándar");
+
+    // Carga pesada (Camión)
+    double costoPes = estrategiaPesada.calcularTarifa(10.0, 80.0, false);
+    ASSERT_TRUE(costoPes > costoFra, "Tarifa pesada de 80kg es mayor a frágil");
+
+    // Verificar integración en Pedido
+    auto paq = std::make_shared<PaqueteEstandar>("P99", "Caja", 3.0, "Av. Dolores", 2);
+    Pedido pedido("PED-999", paq, "Plaza de Armas", "Av. Dolores", 5.0, "Moto");
+
+    ASSERT_TRUE(pedido.getCostoEnvio() > 0.0, "Pedido calcula costo automáticamente con Strategy");
+    pedido.setCostoEnvio(25.50);
+    ASSERT_EQ(pedido.getCostoEnvio(), 25.50, "SetCostoEnvio manual funciona");
+}
+
 // ── Main ─────────────────────────────────────────────────────────────
 int main() {
     std::cout << "╔══════════════════════════════════════════╗\n";
@@ -178,6 +208,7 @@ int main() {
     test_polimorfismo_paquete();
     test_repartidor();
     test_prioridad_urgente();
+    test_estrategias_tarifa_strategy();
 
     std::cout << "\n────────────────────────────────────────────\n";
     std::cout << "Resultados: " << testsPasados << " pasados, "

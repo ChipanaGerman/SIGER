@@ -1,13 +1,14 @@
 #pragma once
 /**
  * @file DashboardView.h
- * @brief Tabla de monitoreo en tiempo real de pedidos de entrega.
+ * @brief Tabla interactiva de monitoreo de pedidos con filtros en tiempo real y exportación CSV.
  */
 
 #include <QWidget>
 #include <QTableWidget>
 #include <QLabel>
 #include <QPushButton>
+#include <QLineEdit>
 
 namespace siger {
 
@@ -25,16 +26,20 @@ public slots:
                          double peso,
                          const QString& origen,
                          const QString& destino,
-                         const QString& vehiculo = "Auto");
+                         const QString& vehiculo = "Auto",
+                         double costo = 0.0,
+                         double distancia = 0.0);
 
     void slotActualizarEstado(const QString& id, const QString& nuevoEstado);
     void slotLimpiarTabla();
+    void slotExportarCsv();
 
 signals:
     void sigCancelarPedido(const QString& id);
 
 private slots:
     void onBtnCancelarClicked();
+    void onFiltrarTabla(const QString& texto);
 
 private:
     void setupUi();
@@ -42,6 +47,7 @@ private:
 
     QTableWidget* m_tabla{nullptr};
     QLabel*       m_lblConteo{nullptr};
+    QLineEdit*    m_txtBuscar{nullptr};
 };
 
 } // namespace siger

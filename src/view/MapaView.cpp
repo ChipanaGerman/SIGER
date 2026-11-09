@@ -211,11 +211,18 @@ void MapaView::inicializarNodos() {
         }
         pin->setZValue(2);
 
+        // Tooltip emergente detallado al pasar o hacer clic sobre el nodo
+        QString tooltipNodo = QString("📍 <b>%1</b><br>🗺️ Red Metropolitana de Arequipa<br>📦 Coordenadas métricas: (%2, %3)<br>🏢 Centro de distribución / recojo activo")
+                                  .arg(it.key()).arg(pt.x(), 0, 'f', 1).arg(pt.y(), 0, 'f', 1);
+        halo->setToolTip(tooltipNodo);
+        pin->setToolTip(tooltipNodo);
+
         // Etiqueta estilo Google Maps "pill" con fondo claro
         auto text = m_scene->addText(it.key(), font);
         text->setDefaultTextColor(QColor(32, 33, 36));
         text->setPos(pt.x() - 40, pt.y() + 8);
         text->setZValue(3);
+        text->setToolTip(tooltipNodo);
     }
 }
 
@@ -297,16 +304,25 @@ void MapaView::animarEntrega(const QString& idPedido,
     double totalFrames = (segs * 1000.0) / 30.0;
     double velPxPorFrame = (totalFrames > 1.0) ? (distTotal / totalFrames) : 2.0;
 
-    // 3. Trazar la polilínea de carretera estilo navegación GPS (Google Maps polyline)
+    // 3. Trazar la polilínea de carretera estilo navegación GPS (bicolor: pendiente en punteado translúcido)
     QPainterPath pathRuta;
     pathRuta.moveTo(puntos.first());
     for (int i = 1; i < puntos.size(); ++i) {
         pathRuta.lineTo(puntos[i]);
     }
 
-    QPen penRuta(colorRuta, 4.5, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
-    auto lineaPath = m_scene->addPath(pathRuta, penRuta);
-    lineaPath->setZValue(10);
+    QColor colorPendiente = colorRuta;
+    colorPendiente.setAlpha(120);
+    QPen penPendiente(colorPendiente, 4.0, Qt::DashLine, Qt::RoundCap, Qt::RoundJoin);
+    auto lineaPendiente = m_scene->addPath(pathRuta, penPendiente);
+    lineaPendiente->setZValue(9);
+
+    // Traza recorrida sólida y vibrante que se va extendiendo
+    QPainterPath pathVacio;
+    pathVacio.moveTo(puntos.first());
+    QPen penRecorrida(colorRuta, 5.0, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+    auto lineaRecorrida = m_scene->addPath(pathVacio, penRecorrida);
+    lineaRecorrida->setZValue(11);
 
     // 4. Móvil en movimiento (inicia en el punto exacto de origen)
     QPointF pInicio = puntos.first();
@@ -315,7 +331,14 @@ void MapaView::animarEntrega(const QString& idPedido,
                                      QBrush(colorMovil));
     movil->setZValue(20);
 
-    // 5. Etiqueta flotante con ID del pedido e icono del vehículo
+    // 5. Flecha direccional orientada en el sentido de avance de la calle
+    QPolygonF triangulo;
+    triangulo << QPointF(0, -6) << QPointF(4, 5) << QPointF(-4, 5);
+    auto flecha = m_scene->addPolygon(triangulo, QPen(Qt::transparent), QBrush(Qt::white));
+    flecha->setPos(pInicio);
+    flecha->setZValue(22);
+
+    // 6. Etiqueta flotante con ID del pedido e icono del vehículo
     QFont fontId("Segoe UI", 9, QFont::Bold);
     QString textoEtiqueta = idPedido.isEmpty() ? (icono + " En Ruta") : (icono + " " + idPedido);
     if (!repartidor.isEmpty()) {
@@ -326,7 +349,7 @@ void MapaView::animarEntrega(const QString& idPedido,
     etiqueta->setPos(pInicio.x() - 25, pInicio.y() - 26);
     etiqueta->setZValue(25);
 
-    // 6. Registrar en la lista de móviles activos
+    // 7. Registrar en la lista de móviles activos
     MovilAnimado anim;
     anim.idPedido = idPedido;
     anim.rutaPuntos = puntos;
@@ -335,8 +358,11 @@ void MapaView::animarEntrega(const QString& idPedido,
     anim.distanciaRecorrida = 0.0;
     anim.velocidadPixelesPorFrame = velPxPorFrame;
     anim.item = movil;
-    anim.linea = lineaPath;
+    anim.flechaDireccion = flecha;
+    anim.lineaPendiente = lineaPendiente;
+    anim.lineaRecorrida = lineaRecorrida;
     anim.etiqueta = etiqueta;
+    anim.penRecorrida = penRecorrida;
 
     m_moviles.push_back(anim);
 
@@ -353,10 +379,14 @@ void MapaView::onTimerAnimacion() {
         if (it->distanciaRecorrida >= it->longitudTotal) {
             // Completó el trayecto por las calles
             m_scene->removeItem(it->item);
-            m_scene->removeItem(it->linea);
+            m_scene->removeItem(it->flechaDireccion);
+            m_scene->removeItem(it->lineaPendiente);
+            m_scene->removeItem(it->lineaRecorrida);
             m_scene->removeItem(it->etiqueta);
             delete it->item;
-            delete it->linea;
+            delete it->flechaDireccion;
+            delete it->lineaPendiente;
+            delete it->lineaRecorrida;
             delete it->etiqueta;
             it = m_moviles.erase(it);
         } else {
@@ -379,8 +409,33 @@ void MapaView::onTimerAnimacion() {
             QPointF pB = pts[segIdx + 1];
             QPointF posActual = pA + (pB - pA) * t;
 
+            // Calcular orientación tangencial de avance en la calle
+            double dx = pB.x() - pA.x();
+            double dy = pB.y() - pA.y();
+            double anguloDeg = std::atan2(dy, dx) * 180.0 / 3.14159265358979323846;
+
             it->item->setRect(posActual.x() - 9, posActual.y() - 9, 18, 18);
+            it->flechaDireccion->setPos(posActual);
+            it->flechaDireccion->setRotation(anguloDeg + 90.0);
             it->etiqueta->setPos(posActual.x() - 25, posActual.y() - 26);
+
+            // Actualizar traza ya recorrida (sólida y luminosa)
+            QPainterPath pathRec;
+            pathRec.moveTo(pts[0]);
+            for (int i = 1; i <= segIdx; ++i) {
+                pathRec.lineTo(pts[i]);
+            }
+            pathRec.lineTo(posActual);
+            it->lineaRecorrida->setPath(pathRec);
+
+            // Actualizar tramo pendiente por recorrer (translúcido)
+            QPainterPath pathPen;
+            pathPen.moveTo(posActual);
+            for (int i = segIdx + 1; i < pts.size(); ++i) {
+                pathPen.lineTo(pts[i]);
+            }
+            it->lineaPendiente->setPath(pathPen);
+
             ++it;
         }
     }
@@ -390,10 +445,14 @@ void MapaView::onTimerAnimacion() {
 void MapaView::resetearMapa() {
     for (auto& m : m_moviles) {
         m_scene->removeItem(m.item);
-        m_scene->removeItem(m.linea);
+        m_scene->removeItem(m.flechaDireccion);
+        m_scene->removeItem(m.lineaPendiente);
+        m_scene->removeItem(m.lineaRecorrida);
         m_scene->removeItem(m.etiqueta);
         delete m.item;
-        delete m.linea;
+        delete m.flechaDireccion;
+        delete m.lineaPendiente;
+        delete m.lineaRecorrida;
         delete m.etiqueta;
     }
     m_moviles.clear();

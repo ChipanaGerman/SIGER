@@ -9,6 +9,7 @@
 #include <QDoubleSpinBox>
 #include <QComboBox>
 #include <QPushButton>
+#include <QLabel>
 
 namespace siger {
 
@@ -26,13 +27,15 @@ signals:
                         const QString& origen,
                         const QString& destino,
                         double distancia,
-                        const QString& tipoVehiculo);
+                        const QString& tipoVehiculo,
+                        double costo);
 
 private slots:
     void onBtnRegistrarClicked();
 
 private:
     void setupUi();
+    void actualizarEstimaciones();
 
     QLineEdit*      m_txtDescripcion{nullptr};
     QComboBox*      m_cmbTipo{nullptr};
@@ -41,6 +44,7 @@ private:
     QComboBox*      m_cmbDestino{nullptr};
     QDoubleSpinBox* m_spnDistancia{nullptr};
     QComboBox*      m_cmbVehiculo{nullptr};
+    QLabel*         m_lblCosto{nullptr};
     QPushButton*    m_btnRegistrar{nullptr};
 };
 

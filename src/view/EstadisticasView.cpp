@@ -1,6 +1,6 @@
 /**
  * @file EstadisticasView.cpp
- * @brief Implementación de la vista de métricas y gráficos estadísticos.
+ * @brief Implementación de la vista de métricas, facturación y gráficos estadísticos.
  */
 
 #include "EstadisticasView.h"
@@ -22,7 +22,7 @@ void EstadisticasView::setupUi() {
     mainLayout->setContentsMargins(10, 10, 10, 10);
     mainLayout->setSpacing(12);
 
-    // Panel superior de tarjetas KPI
+    // Panel superior de tarjetas KPI (6 tarjetas métricas)
     auto kpiLayout = new QGridLayout();
 
     auto crearTarjeta = [](const QString& titulo, const QString& valorInicial, const QString& colorHex) -> std::pair<QGroupBox*, QLabel*> {
@@ -30,7 +30,7 @@ void EstadisticasView::setupUi() {
         auto lyt = new QVBoxLayout(grp);
         auto lbl = new QLabel(valorInicial);
         lbl->setAlignment(Qt::AlignCenter);
-        lbl->setStyleSheet(QString("font-size: 20px; font-weight: bold; color: %1;").arg(colorHex));
+        lbl->setStyleSheet(QString("font-size: 19px; font-weight: bold; color: %1;").arg(colorHex));
         lyt->addWidget(lbl);
         return {grp, lbl};
     };
@@ -39,19 +39,22 @@ void EstadisticasView::setupUi() {
     auto [grpPen, lblPen] = crearTarjeta("Pendientes", "0", "#FFA000");
     auto [grpCom, lblCom] = crearTarjeta("Completados", "0", "#388E3C");
     auto [grpCan, lblCan] = crearTarjeta("Cancelados", "0", "#D32F2F");
-    auto [grpEfe, lblEfe] = crearTarjeta("Tasa de Éxito", "0%", "#7B1FA2");
+    auto [grpEfe, lblEfe] = crearTarjeta("Tasa de Éxito", "0.0%", "#7B1FA2");
+    auto [grpFac, lblFac] = crearTarjeta("Facturación Total", "S/. 0.00", "#2E7D32");
 
     m_lblTotal = lblTot;
     m_lblPendientes = lblPen;
     m_lblCompletados = lblCom;
     m_lblCancelados = lblCan;
     m_lblEfectividad = lblEfe;
+    m_lblTotalFacturado = lblFac;
 
     kpiLayout->addWidget(grpTot, 0, 0);
     kpiLayout->addWidget(grpPen, 0, 1);
     kpiLayout->addWidget(grpCom, 0, 2);
     kpiLayout->addWidget(grpCan, 0, 3);
     kpiLayout->addWidget(grpEfe, 0, 4);
+    kpiLayout->addWidget(grpFac, 0, 5);
 
     mainLayout->addLayout(kpiLayout);
 
@@ -72,7 +75,7 @@ void EstadisticasView::setupUi() {
     mainLayout->addWidget(m_chartView);
 }
 
-void EstadisticasView::slotActualizarEstadisticas(int total, int pendientes, int completados, int cancelados) {
+void EstadisticasView::slotActualizarEstadisticas(int total, int pendientes, int completados, int cancelados, double totalFacturado) {
     m_lblTotal->setText(QString::number(total));
     m_lblPendientes->setText(QString::number(pendientes));
     m_lblCompletados->setText(QString::number(completados));
@@ -83,6 +86,7 @@ void EstadisticasView::slotActualizarEstadisticas(int total, int pendientes, int
         tasa = (static_cast<double>(completados) / total) * 100.0;
     }
     m_lblEfectividad->setText(QString::number(tasa, 'f', 1) + "%");
+    m_lblTotalFacturado->setText(QString("S/. %1").arg(totalFacturado, 0, 'f', 2));
 
     m_series->clear();
     if (pendientes > 0) {

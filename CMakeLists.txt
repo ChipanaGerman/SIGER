@@ -43,6 +43,7 @@ set(VIEW_SOURCES
     src/view/ControlPanel.cpp
     src/view/EstadisticasView.cpp
     src/view/FormPedido.cpp
+    src/view/FlotaView.cpp
 )
 
 # ── Ejecutable principal ───────────────────────────────────────────

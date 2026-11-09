@@ -32,7 +32,8 @@ public slots:
                            const QString& origen,
                            const QString& destino,
                            double distancia,
-                           const QString& tipoVehiculo);
+                           const QString& tipoVehiculo,
+                           double costo = 0.0);
 
     void slotCancelarPedido(const QString& id);
     void slotRefrescarTodos();
@@ -44,7 +45,9 @@ signals:
                         double peso,
                         const QString& origen,
                         const QString& destino,
-                        const QString& vehiculo = "Auto");
+                        const QString& vehiculo = "Auto",
+                        double costo = 0.0,
+                        double distancia = 0.0);
 
     void pedidoActualizado(const QString& id, const QString& nuevoEstado);
     void pedidoEnCamino(const QString& id,
@@ -52,7 +55,7 @@ signals:
                         const QString& destino,
                         const QString& repartidor,
                         const QString& tipoVehiculo = "Auto");
-    void estadisticasActualizadas(int total, int pendientes, int completados, int cancelados);
+    void estadisticasActualizadas(int total, int pendientes, int completados, int cancelados, double totalFacturado = 0.0);
 
 private:
     std::shared_ptr<GestorPedidos> m_gestor;

@@ -4,6 +4,7 @@
  */
 
 #include "MainWindow.h"
+#include "FlotaView.h"
 #include <QMenuBar>
 #include <QStatusBar>
 #include <QMessageBox>
@@ -29,10 +30,12 @@ void MainWindow::setupUi() {
     m_tabWidget = new QTabWidget(this);
     m_dashboardView = new DashboardView(this);
     m_mapaView = new MapaView(this);
+    m_flotaView = new FlotaView(this);
     m_estadisticasView = new EstadisticasView(this);
 
     m_tabWidget->addTab(m_dashboardView, "📋 Dashboard de Pedidos");
     m_tabWidget->addTab(m_mapaView, "🗺️ Mapa Interactivo");
+    m_tabWidget->addTab(m_flotaView, "🚚 Monitoreo de Flota");
     m_tabWidget->addTab(m_estadisticasView, "📊 Estadísticas y Gráficos");
 
     setCentralWidget(m_tabWidget);
@@ -103,6 +106,16 @@ void MainWindow::conectarSignalsSlots() {
             this, [this](const QString& id, const QString& origen, const QString& destino, const QString& rep, const QString& vehiculo) {
                 m_mapaView->animarEntrega(id, origen, destino, rep, vehiculo);
             });
+
+    // Actualización del panel de flota en tiempo real
+    connect(m_pedidoCtrl.get(), &PedidoController::pedidoEnCamino,
+            m_flotaView, &FlotaView::slotPedidoEnCamino);
+
+    connect(m_simulacionCtrl.get(), &SimulacionController::entregaCompletada,
+            m_flotaView, &FlotaView::slotPedidoCompletado);
+
+    connect(m_controlPanel, &ControlPanel::sigDetener,
+            m_flotaView, &FlotaView::slotResetearFlota);
 
     // ── Conexiones de Simulación ──────────────────────────────────────
     connect(m_controlPanel, &ControlPanel::sigIniciar,

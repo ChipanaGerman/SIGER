@@ -2,6 +2,7 @@
  * @file Pedido.cpp
  */
 #include "Pedido.h"
+#include "IEstrategiaTarifa.h"
 
 namespace siger {
 
@@ -17,7 +18,18 @@ Pedido::Pedido(const std::string& id,
     , m_destino(destino)
     , m_distanciaKm(distanciaKm)
     , m_tipoVehiculoRequerido(tipoVehiculo)
-{}
+{
+    // Cálculo inicial de tarifa según estrategia adecuada
+    double peso = m_paquete ? m_paquete->getPesoKg() : 1.0;
+    bool esFragil = m_paquete && m_paquete->requiereManejoEspecial();
+    if (peso > 100.0) {
+        m_costoEnvio = TarifaPesadaStrategy().calcularTarifa(m_distanciaKm, peso, esFragil);
+    } else if (esFragil) {
+        m_costoEnvio = TarifaFragilStrategy().calcularTarifa(m_distanciaKm, peso, esFragil);
+    } else {
+        m_costoEnvio = TarifaEstandarStrategy().calcularTarifa(m_distanciaKm, peso, esFragil);
+    }
+}
 
 std::string Pedido::getTipoVehiculoRequerido() const {
     if (!m_tipoVehiculoRequerido.empty()) {

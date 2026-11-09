@@ -41,6 +41,7 @@ private:
     QTabWidget*       m_tabWidget{nullptr};
     DashboardView*    m_dashboardView{nullptr};
     MapaView*         m_mapaView{nullptr};
+    class FlotaView*  m_flotaView{nullptr};
     EstadisticasView* m_estadisticasView{nullptr};
     ControlPanel*     m_controlPanel{nullptr};
     FormPedido*       m_formPedido{nullptr};

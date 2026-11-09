@@ -144,6 +144,15 @@ EstadisticasPedidos GestorPedidos::getEstadisticas() const {
     stats.cancelados   = m_pedidosCancelados.load();
     int pendientes = stats.total - (stats.completados + stats.cancelados);
     stats.pendientes   = std::max(0, pendientes);
+
+    double ingresos = 0.0;
+    auto todos = m_repositorioPedidos.obtenerTodos();
+    for (const auto& p : todos) {
+        if (p && p->getEstado() == EstadoPedido::COMPLETADO) {
+            ingresos += p->getCostoEnvio();
+        }
+    }
+    stats.totalFacturado = ingresos;
     return stats;
 }
 

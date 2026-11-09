@@ -5,6 +5,7 @@
 
 #include "FormPedido.h"
 #include "ServicioRutas.h"
+#include "IEstrategiaTarifa.h"
 #include <QVBoxLayout>
 #include <QFormLayout>
 #include <QGroupBox>
@@ -96,6 +97,10 @@ void FormPedido::setupUi() {
     m_cmbVehiculo->addItem("Camión (hasta 2000kg)");
     formLayout->addRow("Vehículo Sugerido:", m_cmbVehiculo);
 
+    m_lblCosto = new QLabel("S/. 0.00", this);
+    m_lblCosto->setStyleSheet("font-weight: bold; font-size: 14px; color: #2E7D32; background: #E8F5E9; padding: 4px 8px; border-radius: 4px;");
+    formLayout->addRow("Tarifa Estimada:", m_lblCosto);
+
     // Ajustar vehículo sugerido según el peso automáticamente
     connect(m_spnPeso, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, [this](double val) {
         if (val <= 15.0) {
@@ -105,18 +110,29 @@ void FormPedido::setupUi() {
         } else {
             m_cmbVehiculo->setCurrentIndex(2); // Camión
         }
+        actualizarEstimaciones();
     });
 
-    // Calcular automáticamente la distancia vial real (OSRM) al cambiar origen o destino
-    auto recalcularDistancia = [this]() {
-        QString o = m_cmbOrigen->currentText();
-        QString d = m_cmbDestino->currentText();
-        double km = ServicioRutas::instancia().calcularDistanciaKm(o, d);
-        m_spnDistancia->setValue(km);
-    };
-    connect(m_cmbOrigen, &QComboBox::currentTextChanged, this, recalcularDistancia);
-    connect(m_cmbDestino, &QComboBox::currentTextChanged, this, recalcularDistancia);
-    recalcularDistancia();
+    connect(m_cmbOrigen, &QComboBox::currentTextChanged, this, &FormPedido::actualizarEstimaciones);
+    connect(m_cmbDestino, &QComboBox::currentTextChanged, this, &FormPedido::actualizarEstimaciones);
+    connect(m_cmbTipo, &QComboBox::currentTextChanged, this, &FormPedido::actualizarEstimaciones);
+    connect(m_spnDistancia, QOverload<double>::of(&QDoubleSpinBox::valueChanged), this, [this]() {
+        // Recalcular costo si el usuario altera manualmente la distancia
+        bool esFragil = m_cmbTipo->currentText().contains("Frágil", Qt::CaseInsensitive);
+        double dist = m_spnDistancia->value();
+        double peso = m_spnPeso->value();
+        double costo = 0.0;
+        if (peso > 100.0) {
+            costo = TarifaPesadaStrategy().calcularTarifa(dist, peso, esFragil);
+        } else if (esFragil) {
+            costo = TarifaFragilStrategy().calcularTarifa(dist, peso, esFragil);
+        } else {
+            costo = TarifaEstandarStrategy().calcularTarifa(dist, peso, esFragil);
+        }
+        m_lblCosto->setText(QString("S/. %1").arg(costo, 0, 'f', 2));
+    });
+
+    actualizarEstimaciones();
 
     m_btnRegistrar = new QPushButton("➕ Registrar Pedido", this);
     m_btnRegistrar->setStyleSheet("background-color: #0288D1; color: white; font-weight: bold; padding: 8px; border-radius: 4px;");
@@ -126,6 +142,26 @@ void FormPedido::setupUi() {
     mainLayout->addStretch();
 
     connect(m_btnRegistrar, &QPushButton::clicked, this, &FormPedido::onBtnRegistrarClicked);
+}
+
+void FormPedido::actualizarEstimaciones() {
+    QString o = m_cmbOrigen->currentText();
+    QString d = m_cmbDestino->currentText();
+    double km = ServicioRutas::instancia().calcularDistanciaKm(o, d);
+    m_spnDistancia->setValue(km);
+
+    double peso = m_spnPeso->value();
+    bool esFragil = m_cmbTipo->currentText().contains("Frágil", Qt::CaseInsensitive);
+
+    double costo = 0.0;
+    if (peso > 100.0) {
+        costo = TarifaPesadaStrategy().calcularTarifa(km, peso, esFragil);
+    } else if (esFragil) {
+        costo = TarifaFragilStrategy().calcularTarifa(km, peso, esFragil);
+    } else {
+        costo = TarifaEstandarStrategy().calcularTarifa(km, peso, esFragil);
+    }
+    m_lblCosto->setText(QString("S/. %1").arg(costo, 0, 'f', 2));
 }
 
 void FormPedido::onBtnRegistrarClicked() {
@@ -141,7 +177,17 @@ void FormPedido::onBtnRegistrarClicked() {
     double dist = m_spnDistancia->value();
     QString vehiculo = m_cmbVehiculo->currentText();
 
-    emit sigNuevoPedido(tipo, desc, peso, origen, destino, dist, vehiculo);
+    bool esFragil = tipo.contains("Frágil", Qt::CaseInsensitive);
+    double costo = 0.0;
+    if (peso > 100.0) {
+        costo = TarifaPesadaStrategy().calcularTarifa(dist, peso, esFragil);
+    } else if (esFragil) {
+        costo = TarifaFragilStrategy().calcularTarifa(dist, peso, esFragil);
+    } else {
+        costo = TarifaEstandarStrategy().calcularTarifa(dist, peso, esFragil);
+    }
+
+    emit sigNuevoPedido(tipo, desc, peso, origen, destino, dist, vehiculo, costo);
 
     m_txtDescripcion->clear();
     m_spnPeso->setValue(2.0);

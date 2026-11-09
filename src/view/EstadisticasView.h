@@ -1,7 +1,7 @@
 #pragma once
 /**
  * @file EstadisticasView.h
- * @brief Vista de métricas y gráficos estadísticos de entregas con QtCharts.
+ * @brief Vista de métricas, facturación y gráficos estadísticos de entregas con QtCharts.
  */
 
 #include <QWidget>
@@ -20,7 +20,7 @@ public:
     ~EstadisticasView() override = default;
 
 public slots:
-    void slotActualizarEstadisticas(int total, int pendientes, int completados, int cancelados);
+    void slotActualizarEstadisticas(int total, int pendientes, int completados, int cancelados, double totalFacturado = 0.0);
 
 private:
     void setupUi();
@@ -30,6 +30,7 @@ private:
     QLabel*              m_lblCompletados{nullptr};
     QLabel*              m_lblCancelados{nullptr};
     QLabel*              m_lblEfectividad{nullptr};
+    QLabel*              m_lblTotalFacturado{nullptr};
 
     QChart*              m_chart{nullptr};
     QPieSeries*          m_series{nullptr};

@@ -9,6 +9,7 @@
 #include <QGraphicsScene>
 #include <QGraphicsEllipseItem>
 #include <QGraphicsPathItem>
+#include <QGraphicsPolygonItem>
 #include <QGraphicsTextItem>
 #include <QPainterPath>
 #include <QTimer>
@@ -60,15 +61,18 @@ private:
     QMap<QString, QPointF> m_posiciones;
 
     struct MovilAnimado {
-        QString               idPedido;
-        QVector<QPointF>      rutaPuntos;
-        QVector<double>       distAcumulada;
-        double                longitudTotal{0.0};
-        double                distanciaRecorrida{0.0};
-        double                velocidadPixelesPorFrame{2.2};
-        QGraphicsEllipseItem* item{nullptr};
-        QGraphicsPathItem*    linea{nullptr};
-        QGraphicsTextItem*    etiqueta{nullptr};
+        QString                 idPedido;
+        QVector<QPointF>        rutaPuntos;
+        QVector<double>         distAcumulada;
+        double                  longitudTotal{0.0};
+        double                  distanciaRecorrida{0.0};
+        double                  velocidadPixelesPorFrame{2.2};
+        QGraphicsEllipseItem*   item{nullptr};
+        QGraphicsPolygonItem*   flechaDireccion{nullptr};
+        QGraphicsPathItem*      lineaPendiente{nullptr};
+        QGraphicsPathItem*      lineaRecorrida{nullptr};
+        QGraphicsTextItem*      etiqueta{nullptr};
+        QPen                    penRecorrida;
     };
     std::vector<MovilAnimado> m_moviles;
 };

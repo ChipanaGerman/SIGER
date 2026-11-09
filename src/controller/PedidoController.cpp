@@ -30,14 +30,17 @@ void PedidoController::onEvento(const DatoEvento& evento) {
                     ped->getPaquete() ? ped->getPaquete()->getPesoKg() : 1.0,
                     QString::fromStdString(ped->getOrigen()),
                     QString::fromStdString(ped->getDestino()),
-                    QString::fromStdString(ped->getTipoVehiculoRequerido())
+                    QString::fromStdString(ped->getTipoVehiculoRequerido()),
+                    ped->getCostoEnvio(),
+                    ped->getDistanciaKm()
                 );
             }
             auto stats = m_gestor->getEstadisticas();
             emit estadisticasActualizadas(stats.total,
                                           stats.pendientes,
                                           stats.completados,
-                                          stats.cancelados);
+                                          stats.cancelados,
+                                          stats.totalFacturado);
         }
     } else if (evento.tipo == EventoSiger::PEDIDO_EN_CAMINO) {
         emit pedidoActualizado(QString::fromStdString(evento.idEntidad), "EN CAMINO");
@@ -57,7 +60,8 @@ void PedidoController::onEvento(const DatoEvento& evento) {
             emit estadisticasActualizadas(stats.total,
                                           stats.pendientes,
                                           stats.completados,
-                                          stats.cancelados);
+                                          stats.cancelados,
+                                          stats.totalFacturado);
         }
     } else if (evento.tipo == EventoSiger::PEDIDO_COMPLETADO) {
         emit pedidoActualizado(QString::fromStdString(evento.idEntidad), "COMPLETADO");
@@ -69,7 +73,8 @@ void PedidoController::onEvento(const DatoEvento& evento) {
             emit estadisticasActualizadas(stats.total,
                                           stats.pendientes,
                                           stats.completados,
-                                          stats.cancelados);
+                                          stats.cancelados,
+                                          stats.totalFacturado);
         }
     } else if (evento.tipo == EventoSiger::PEDIDO_CANCELADO) {
         emit pedidoActualizado(QString::fromStdString(evento.idEntidad), "CANCELADO");
@@ -78,7 +83,8 @@ void PedidoController::onEvento(const DatoEvento& evento) {
             emit estadisticasActualizadas(stats.total,
                                           stats.pendientes,
                                           stats.completados,
-                                          stats.cancelados);
+                                          stats.cancelados,
+                                          stats.totalFacturado);
         }
     }
 }
@@ -89,7 +95,8 @@ void PedidoController::slotAgregarPedido(const QString& tipo,
                                          const QString& origen,
                                          const QString& destino,
                                          double distancia,
-                                         const QString& tipoVehiculo) {
+                                         const QString& tipoVehiculo,
+                                         double costo) {
     if (!m_gestor) return;
 
     std::ostringstream oss;
@@ -134,6 +141,10 @@ void PedidoController::slotAgregarPedido(const QString& tipo,
         vehiculoReq
     );
 
+    if (costo > 0.0) {
+        pedido->setCostoEnvio(costo);
+    }
+
     // Al registrarlo, el gestor notifica PEDIDO_NUEVO a onEvento,
     // el cual se encarga de emitir pedidoAgregado y estadisticasActualizadas.
     m_gestor->registrarPedido(pedido);
@@ -157,7 +168,9 @@ void PedidoController::slotRefrescarTodos() {
             ped->getPaquete() ? ped->getPaquete()->getPesoKg() : 0.0,
             QString::fromStdString(ped->getOrigen()),
             QString::fromStdString(ped->getDestino()),
-            QString::fromStdString(ped->getTipoVehiculoRequerido())
+            QString::fromStdString(ped->getTipoVehiculoRequerido()),
+            ped->getCostoEnvio(),
+            ped->getDistanciaKm()
         );
     }
 
@@ -165,7 +178,8 @@ void PedidoController::slotRefrescarTodos() {
     emit estadisticasActualizadas(stats.total,
                                   stats.pendientes,
                                   stats.completados,
-                                  stats.cancelados);
+                                  stats.cancelados,
+                                  stats.totalFacturado);
 }
 
 } // namespace siger

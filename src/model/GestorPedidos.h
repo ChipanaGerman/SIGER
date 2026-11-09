@@ -28,6 +28,7 @@ struct EstadisticasPedidos {
     int pendientes { 0 }; ///< Pedidos en cola o activos (aún no finalizados).
     int completados{ 0 }; ///< Pedidos finalizados correctamente.
     int cancelados { 0 }; ///< Pedidos anulados.
+    double totalFacturado { 0.0 }; ///< Importe total facturado en Soles (S/.)
 };
 
 /**
