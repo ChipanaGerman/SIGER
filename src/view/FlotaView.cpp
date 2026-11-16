@@ -189,4 +189,21 @@ void FlotaView::slotResetearFlota() {
     }
 }
 
+void FlotaView::setModoOscuro(bool activo) {
+    QString qssGrp = activo
+        ? "QGroupBox { font-weight: bold; font-size: 13px; border: 1px solid #37474F; border-radius: 6px; margin-top: 10px; padding: 10px; background: #262932; color: #ECEFF1; }"
+          "QGroupBox::title { subcontrol-origin: margin; subcontrol-position: top left; padding: 0 5px; color: #00BCD4; }"
+        : "QGroupBox { font-weight: bold; font-size: 13px; border: 1px solid #CFD8DC; border-radius: 6px; margin-top: 10px; padding: 10px; background: white; }"
+          "QGroupBox::title { subcontrol-origin: margin; subcontrol-position: top left; padding: 0 5px; color: #37474F; }";
+
+    QString colorTxt = activo ? "color: #B0BEC5; font-size: 12px; font-style: italic;" : "color: #455A64; font-size: 12px; font-style: italic;";
+
+    for (auto it = m_vehiculos.begin(); it != m_vehiculos.end(); ++it) {
+        if (it->grupo) it->grupo->setStyleSheet(qssGrp);
+        if (!it->enRuta && it->lblPedido) {
+            it->lblPedido->setStyleSheet(colorTxt);
+        }
+    }
+}
+
 } // namespace siger

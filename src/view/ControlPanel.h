@@ -8,6 +8,7 @@
 #include <QPushButton>
 #include <QSlider>
 #include <QLabel>
+#include <QComboBox>
 
 namespace siger {
 
@@ -28,23 +29,28 @@ signals:
     void sigReanudar();
     void sigDetener();
     void sigVelocidadCambiada(int ms);
+    void sigTraficoCambiado(double factor);
+    void sigGenerarLoteDemo(int cantidad);
 
 private slots:
     void onBtnIniciarClicked();
     void onBtnPausarClicked();
     void onBtnDetenerClicked();
     void onSliderVelocidadChanged(int val);
+    void onCmbTraficoChanged(int index);
 
 private:
     void setupUi();
 
-    QPushButton* m_btnIniciar{nullptr};
-    QPushButton* m_btnPausar{nullptr};
-    QPushButton* m_btnDetener{nullptr};
-    QSlider*     m_sliderVelocidad{nullptr};
-    QLabel*      m_lblVelocidad{nullptr};
-    QLabel*      m_lblEstado{nullptr};
-    bool         m_enPausa{false};
+    QPushButton*      m_btnIniciar{nullptr};
+    QPushButton*      m_btnPausar{nullptr};
+    QPushButton*      m_btnDetener{nullptr};
+    QPushButton*  m_btnLoteDemo{nullptr};
+    QComboBox*    m_cmbTrafico{nullptr};
+    QSlider*          m_sliderVelocidad{nullptr};
+    QLabel*           m_lblVelocidad{nullptr};
+    QLabel*           m_lblEstado{nullptr};
+    bool              m_enPausa{false};
 };
 
 } // namespace siger

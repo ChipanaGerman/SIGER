@@ -9,6 +9,7 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QPushButton>
+#include <QFrame>
 #include <QPen>
 #include <QBrush>
 #include <QFont>
@@ -72,6 +73,45 @@ void MapaView::setupUi() {
     m_view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     layout->addWidget(m_view);
 
+    // Mini-HUD flotante sobre el mapa
+    m_hudOverlay = new QFrame(m_view);
+    m_hudOverlay->setObjectName("hudOverlay");
+    m_hudOverlay->setStyleSheet(
+        "QFrame#hudOverlay {"
+        "  background-color: rgba(255, 255, 255, 0.92);"
+        "  border: 1px solid #1A73E8;"
+        "  border-radius: 8px;"
+        "  padding: 6px 10px;"
+        "}"
+        "QLabel {"
+        "  font-size: 11px;"
+        "  font-weight: bold;"
+        "  color: #37474F;"
+        "}"
+    );
+
+    auto hudLayout = new QVBoxLayout(m_hudOverlay);
+    hudLayout->setContentsMargins(6, 4, 6, 4);
+    hudLayout->setSpacing(3);
+
+    auto lblHudTitulo = new QLabel("⚡ TELEMETRÍA METROPOLITANA", m_hudOverlay);
+    lblHudTitulo->setStyleSheet("font-size: 10px; font-weight: bold; color: #1A73E8; letter-spacing: 0.5px;");
+    hudLayout->addWidget(lblHudTitulo);
+
+    m_lblHudCola = new QLabel("📦 En espera: 0", m_hudOverlay);
+    m_lblHudRuta = new QLabel("🚚 En tránsito: 0", m_hudOverlay);
+    m_lblHudTrafico = new QLabel("🚦 Tráfico: 🟢 Fluido (1.0x)", m_hudOverlay);
+    m_lblHudTiempo = new QLabel("⏱️ Simulación: 00:00", m_hudOverlay);
+
+    hudLayout->addWidget(m_lblHudCola);
+    hudLayout->addWidget(m_lblHudRuta);
+    hudLayout->addWidget(m_lblHudTrafico);
+    hudLayout->addWidget(m_lblHudTiempo);
+
+    m_hudOverlay->adjustSize();
+    m_hudOverlay->move(14, 14);
+    m_hudOverlay->show();
+
     inicializarNodos();
 
     m_timerAnim = new QTimer(this);
@@ -110,6 +150,9 @@ void MapaView::wheelEvent(QWheelEvent* event) {
 
 void MapaView::resizeEvent(QResizeEvent* event) {
     QWidget::resizeEvent(event);
+    if (m_hudOverlay) {
+        m_hudOverlay->move(14, 14);
+    }
     static bool primerResize = true;
     if (primerResize && m_view && m_scene) {
         primerResize = false;
@@ -300,8 +343,8 @@ void MapaView::animarEntrega(const QString& idPedido,
         segs = 5.0 + distKm * 1.3;
     }
 
-    // Total de frames esperados en la animación gráfica (a 30ms/frame), sincronizados con factor de velocidad
-    double duracionSegs = segs * m_factorVelocidad;
+    // Total de frames esperados en la animación gráfica (a 30ms/frame), sincronizados con factor de velocidad y tráfico
+    double duracionSegs = segs * m_factorVelocidad * m_factorTrafico;
     double totalFrames = (duracionSegs * 1000.0) / 30.0;
     double velPxPorFrame = (totalFrames > 1.0) ? (distTotal / totalFrames) : 2.0;
 
@@ -378,7 +421,14 @@ void MapaView::onTimerAnimacion() {
     for (auto it = m_moviles.begin(); it != m_moviles.end();) {
         it->distanciaRecorrida += it->velocidadPixelesPorFrame;
         if (it->distanciaRecorrida >= it->longitudTotal) {
-            // Completó el trayecto por las calles
+            // Completó el trayecto por las calles: crear efecto visual de pulso en destino
+            QPointF pDest = it->rutaPuntos.isEmpty() ? QPointF(0, 0) : it->rutaPuntos.last();
+            auto pulso = m_scene->addEllipse(pDest.x() - 8, pDest.y() - 8, 16, 16,
+                                              QPen(QColor(0, 230, 118, 220), 2.5),
+                                              QBrush(QColor(0, 230, 118, 60)));
+            pulso->setZValue(15);
+            m_pulsos.push_back({ pDest, 8.0, 52.0, 1.0, pulso });
+
             m_scene->removeItem(it->item);
             m_scene->removeItem(it->flechaDireccion);
             m_scene->removeItem(it->lineaPendiente);
@@ -440,7 +490,34 @@ void MapaView::onTimerAnimacion() {
             ++it;
         }
     }
+
+    // Animación de ondas de pulso de llegada
+    for (auto pit = m_pulsos.begin(); pit != m_pulsos.end();) {
+        pit->radioActual += 2.4;
+        pit->opacidad -= 0.055;
+        if (pit->opacidad <= 0.0 || pit->radioActual >= pit->radioMax) {
+            m_scene->removeItem(pit->item);
+            delete pit->item;
+            pit = m_pulsos.erase(pit);
+        } else {
+            pit->item->setRect(pit->centro.x() - pit->radioActual,
+                               pit->centro.y() - pit->radioActual,
+                               pit->radioActual * 2.0,
+                               pit->radioActual * 2.0);
+            int alpha = static_cast<int>(std::max(0.0, pit->opacidad) * 220.0);
+            int fillAlpha = static_cast<int>(std::max(0.0, pit->opacidad) * 60.0);
+            QColor strokeColor = m_esModoOscuro ? QColor(0, 230, 118, alpha) : QColor(46, 125, 50, alpha);
+            QColor fillColor = m_esModoOscuro ? QColor(0, 230, 118, fillAlpha) : QColor(76, 175, 80, fillAlpha);
+            pit->item->setPen(QPen(strokeColor, 2.5));
+            pit->item->setBrush(QBrush(fillColor));
+            ++pit;
+        }
+    }
+
     m_lblInfo->setText(QString("🗺️ Red de Reparto Metropolitano Arequipa (Rutas Viales OSRM) | Envíos activos: %1").arg(m_moviles.size()));
+    if (m_lblHudRuta) {
+        m_lblHudRuta->setText(QString("🚚 En tránsito: %1").arg(m_moviles.size()));
+    }
 }
 
 void MapaView::resetearMapa() {
@@ -457,12 +534,76 @@ void MapaView::resetearMapa() {
         delete m.etiqueta;
     }
     m_moviles.clear();
+
+    for (auto& p : m_pulsos) {
+        m_scene->removeItem(p.item);
+        delete p.item;
+    }
+    m_pulsos.clear();
+
     m_lblInfo->setText("🗺️ Red de Reparto Metropolitano Arequipa (Rutas Viales OSRM) | Envíos activos: 0");
+    if (m_lblHudRuta) {
+        m_lblHudRuta->setText("🚚 En tránsito: 0");
+    }
 }
 
 void MapaView::setFactorVelocidad(double factor) {
     if (factor > 0.05) {
         m_factorVelocidad = factor;
+    }
+}
+
+void MapaView::setFactorTrafico(double factor) {
+    m_factorTrafico = std::max(0.1, factor);
+    QString traficoDesc = "🟢 Fluido (1.0x)";
+    if (factor > 1.4) traficoDesc = "🔴 Hora Punta (1.6x)";
+    else if (factor > 1.1) traficoDesc = "🟡 Moderado (1.25x)";
+    if (m_lblHudTrafico) m_lblHudTrafico->setText("🚦 Tráfico: " + traficoDesc);
+}
+
+void MapaView::actualizarHud(int enCola, int enRuta, const QString& traficoStr, const QString& tiempoStr) {
+    if (m_lblHudCola) m_lblHudCola->setText(QString("📦 En espera: %1").arg(enCola));
+    if (m_lblHudRuta) m_lblHudRuta->setText(QString("🚚 En tránsito: %1").arg(enRuta));
+    if (m_lblHudTrafico && !traficoStr.isEmpty()) m_lblHudTrafico->setText("🚦 Tráfico: " + traficoStr);
+    if (m_lblHudTiempo && !tiempoStr.isEmpty()) m_lblHudTiempo->setText("⏱️ Simulación: " + tiempoStr);
+}
+
+void MapaView::setModoOscuro(bool activo) {
+    m_esModoOscuro = activo;
+    if (m_esModoOscuro) {
+        m_view->setBackgroundBrush(QBrush(QColor(20, 24, 30)));
+        if (m_hudOverlay) {
+            m_hudOverlay->setStyleSheet(
+                "QFrame#hudOverlay {"
+                "  background-color: rgba(22, 27, 34, 0.92);"
+                "  border: 1px solid #00BCD4;"
+                "  border-radius: 8px;"
+                "  padding: 6px 10px;"
+                "}"
+                "QLabel {"
+                "  font-size: 11px;"
+                "  font-weight: bold;"
+                "  color: #ECEFF1;"
+                "}"
+            );
+        }
+    } else {
+        m_view->setBackgroundBrush(QBrush(QColor(241, 243, 244)));
+        if (m_hudOverlay) {
+            m_hudOverlay->setStyleSheet(
+                "QFrame#hudOverlay {"
+                "  background-color: rgba(255, 255, 255, 0.92);"
+                "  border: 1px solid #1A73E8;"
+                "  border-radius: 8px;"
+                "  padding: 6px 10px;"
+                "}"
+                "QLabel {"
+                "  font-size: 11px;"
+                "  font-weight: bold;"
+                "  color: #37474F;"
+                "}"
+            );
+        }
     }
 }
 

@@ -85,4 +85,11 @@ void SimulacionController::slotSetVelocidad(int ms) {
     }
 }
 
+void SimulacionController::slotSetTrafico(double factor) {
+    if (m_simulador) {
+        m_simulador->setFactorTrafico(factor);
+    }
+    emit traficoCambiado(factor);
+}
+
 } // namespace siger

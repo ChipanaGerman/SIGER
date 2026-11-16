@@ -110,6 +110,14 @@ void SimuladorEntregas::setVelocidad(int ms) {
     m_velocidadSimulacion = std::max(1, ms);
 }
 
+void SimuladorEntregas::setFactorTrafico(double factor) {
+    m_factorTrafico.store(std::max(0.1, factor));
+}
+
+double SimuladorEntregas::getFactorTrafico() const {
+    return m_factorTrafico.load();
+}
+
 bool SimuladorEntregas::isCorriendo() const {
     return m_corriendo.load() && !m_pausado.load();
 }
@@ -219,9 +227,10 @@ void SimuladorEntregas::hiloRepartidor(std::shared_ptr<Repartidor> rep) {
             // y se asienta visualmente antes de emitir la finalización del pedido
             int duracionBaseMs = static_cast<int>((segs + 0.4) * 1000.0);
             double factorVelocidad = static_cast<double>(m_velocidadSimulacion) / 1000.0;
+            double factorTrafico = m_factorTrafico.load();
             int duracionMs = (m_velocidadSimulacion < 100)
                              ? 10
-                             : std::max(60, static_cast<int>(duracionBaseMs * factorVelocidad));
+                             : std::max(60, static_cast<int>(duracionBaseMs * factorVelocidad * factorTrafico));
 
             int transcurrido = 0;
             int paso = std::min(50, duracionMs);

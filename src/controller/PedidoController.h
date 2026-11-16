@@ -38,6 +38,10 @@ public slots:
     void slotCancelarPedido(const QString& id);
     void slotRefrescarTodos();
 
+    [[nodiscard]] std::vector<std::shared_ptr<Pedido>> getTodosLosPedidos() const {
+        return m_gestor ? m_gestor->getTodosLosPedidos() : std::vector<std::shared_ptr<Pedido>>{};
+    }
+
 signals:
     void pedidoAgregado(const QString& id,
                         const QString& tipo,

@@ -60,6 +60,9 @@ public:
     [[nodiscard]] std::optional<std::shared_ptr<Pedido>> obtenerSiguiente();
     [[nodiscard]] std::optional<std::shared_ptr<Pedido>> obtenerPedido(const std::string& id) const;
     [[nodiscard]] std::vector<std::shared_ptr<Pedido>> getPedidosActivos() const;
+    [[nodiscard]] std::vector<std::shared_ptr<Pedido>> getTodosLosPedidos() const {
+        return m_repositorioPedidos.obtenerTodos();
+    }
     [[nodiscard]] EstadisticasPedidos getEstadisticas() const;
 
 private:

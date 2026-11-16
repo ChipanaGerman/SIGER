@@ -33,6 +33,7 @@ public slots:
     void slotReanudar();
     void slotDetener();
     void slotSetVelocidad(int ms);
+    void slotSetTrafico(double factor);
 
 signals:
     void simulacionIniciada();
@@ -41,6 +42,7 @@ signals:
     void todosCompletados();      ///< Todos los pedidos registrados finalizaron.
     void entregaCompletada(const QString& idPedido, const QString& idRepartidor);
     void estadoActualizado(int entregados, int fallidos, int enCamino);
+    void traficoCambiado(double factor);
 
 private:
     std::shared_ptr<SimuladorEntregas> m_simulador;

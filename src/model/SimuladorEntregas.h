@@ -52,6 +52,8 @@ public:
     void reanudar();
     void detener();
     void setVelocidad(int ms);
+    void setFactorTrafico(double factor);
+    [[nodiscard]] double getFactorTrafico() const;
 
     [[nodiscard]] bool isCorriendo() const;
     [[nodiscard]] EstadisticasSimulacion getEstadisticas() const;
@@ -68,6 +70,7 @@ private:
     std::atomic<bool>                              m_corriendo{ false };
     std::atomic<bool>                              m_pausado  { false };
     int                                            m_velocidadSimulacion{ 1000 };
+    std::atomic<double>                            m_factorTrafico{ 1.0 };
 
     std::atomic<int>                               m_totalEntregados{ 0 };
     std::atomic<int>                               m_totalFallidos  { 0 };

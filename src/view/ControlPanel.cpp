@@ -7,6 +7,9 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QGroupBox>
+#include <QComboBox>
+#include <QMenu>
+#include <QAction>
 
 namespace siger {
 
@@ -46,6 +49,18 @@ void ControlPanel::setupUi() {
     grpLayout->addWidget(m_btnPausar);
     grpLayout->addWidget(m_btnDetener);
 
+    // Selector de Tráfico Metropolitano
+    grpLayout->addSpacing(8);
+    auto lblTrafico = new QLabel("🚦 Condición Vial / Tráfico:", this);
+    lblTrafico->setStyleSheet("font-weight: bold; font-size: 11px; color: #37474F;");
+    grpLayout->addWidget(lblTrafico);
+
+    m_cmbTrafico = new QComboBox(this);
+    m_cmbTrafico->addItem("🟢 Tráfico Fluido (1.0x)", 1.0);
+    m_cmbTrafico->addItem("🟡 Tráfico Moderado (1.25x)", 1.25);
+    m_cmbTrafico->addItem("🔴 Hora Punta / Congestión (1.6x)", 1.6);
+    grpLayout->addWidget(m_cmbTrafico);
+
     // Slider de velocidad
     grpLayout->addSpacing(10);
     m_lblVelocidad = new QLabel("Velocidad: 1.0x (Normal)", this);
@@ -58,6 +73,20 @@ void ControlPanel::setupUi() {
     m_sliderVelocidad->setToolTip("Ajusta el multiplicador de tiempo de la simulación (cámara rápida/normal)");
     grpLayout->addWidget(m_sliderVelocidad);
 
+    // Botón de Demostración Rápida (Generar Lote)
+    grpLayout->addSpacing(12);
+    m_btnLoteDemo = new QPushButton("🎲 Cargar Lote Demo...", this);
+    m_btnLoteDemo->setStyleSheet("background-color: #673AB7; color: white; font-weight: bold; padding: 8px; border-radius: 4px;");
+    m_btnLoteDemo->setToolTip("Genera pedidos automáticos variados en Arequipa para sustentar y probar en 1 clic");
+
+    auto menuDemo = new QMenu(this);
+    auto act5 = menuDemo->addAction("🎲 Lote Rápido (5 pedidos variados)");
+    auto act10 = menuDemo->addAction("⚡ Lote Completo (10 pedidos para toda la flota)");
+    connect(act5, &QAction::triggered, this, [this]() { emit sigGenerarLoteDemo(5); });
+    connect(act10, &QAction::triggered, this, [this]() { emit sigGenerarLoteDemo(10); });
+    m_btnLoteDemo->setMenu(menuDemo);
+    grpLayout->addWidget(m_btnLoteDemo);
+
     grpLayout->addStretch();
     mainLayout->addWidget(grpControl);
 
@@ -66,6 +95,7 @@ void ControlPanel::setupUi() {
     connect(m_btnPausar, &QPushButton::clicked, this, &ControlPanel::onBtnPausarClicked);
     connect(m_btnDetener, &QPushButton::clicked, this, &ControlPanel::onBtnDetenerClicked);
     connect(m_sliderVelocidad, &QSlider::valueChanged, this, &ControlPanel::onSliderVelocidadChanged);
+    connect(m_cmbTrafico, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &ControlPanel::onCmbTraficoChanged);
 }
 
 void ControlPanel::setEstadoSimulacion(const QString& estado, const QString& colorHex) {
@@ -132,6 +162,14 @@ void ControlPanel::onSliderVelocidadChanged(int val) {
 
     m_lblVelocidad->setText(QString("Velocidad: %1x (%2)").arg(factor, 0, 'f', 1).arg(desc));
     emit sigVelocidadCambiada(val);
+}
+
+void ControlPanel::onCmbTraficoChanged(int index) {
+    Q_UNUSED(index);
+    if (m_cmbTrafico) {
+        double factor = m_cmbTrafico->currentData().toDouble();
+        emit sigTraficoCambiado(factor);
+    }
 }
 
 } // namespace siger

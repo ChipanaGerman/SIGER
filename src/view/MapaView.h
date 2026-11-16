@@ -37,6 +37,9 @@ public slots:
     void animarEntregaSimple(const QString& origen, const QString& destino);
     void resetearMapa();
     void setFactorVelocidad(double factor);
+    void setFactorTrafico(double factor);
+    void setModoOscuro(bool activo);
+    void actualizarHud(int enCola, int enRuta, const QString& traficoStr, const QString& tiempoStr);
     void zoomIn();
     void zoomOut();
     void centrarMapa();
@@ -61,6 +64,24 @@ private:
 
     QMap<QString, QPointF> m_posiciones;
     double                 m_factorVelocidad{1.0};
+    double                 m_factorTrafico{1.0};
+    bool                   m_esModoOscuro{false};
+
+    // Telemetría Mini-HUD flotante
+    class QFrame*          m_hudOverlay{nullptr};
+    QLabel*                m_lblHudCola{nullptr};
+    QLabel*                m_lblHudRuta{nullptr};
+    QLabel*                m_lblHudTrafico{nullptr};
+    QLabel*                m_lblHudTiempo{nullptr};
+
+    struct PulsoLlegada {
+        QPointF centro;
+        double radioActual{8.0};
+        double radioMax{48.0};
+        double opacidad{1.0};
+        QGraphicsEllipseItem* item{nullptr};
+    };
+    std::vector<PulsoLlegada> m_pulsos;
 
     struct MovilAnimado {
         QString                 idPedido;

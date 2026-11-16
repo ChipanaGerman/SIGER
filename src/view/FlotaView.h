@@ -46,6 +46,7 @@ public slots:
 
     void slotPedidoCompletado(const QString& idPedido, const QString& repartidor);
     void slotResetearFlota();
+    void setModoOscuro(bool activo);
 
 private slots:
     void onTimerAnimacionProgreso();
