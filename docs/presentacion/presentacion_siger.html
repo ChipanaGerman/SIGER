@@ -5,711 +5,580 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SIGER — Presentación Final | Tecnología de Objetos · UNSA</title>
 
-  <!-- Reveal.js -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reset.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css" />
-
-  <!-- Highlight.js (atom-one-dark) -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/atom-one-dark.min.css" />
-
-  <!-- Google Fonts: Inter + JetBrains Mono -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.min.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet" />
 
   <style>
-    /* ═══════════════════════════════════════════════
-       VARIABLES DE TEMA "DARK TECH COCKPIT"
-    ═══════════════════════════════════════════════ */
     :root {
-      --bg-deep:    #0B0F19;
-      --bg-card:    rgba(255,255,255,0.045);
-      --bg-card2:   rgba(6,182,212,0.07);
-      --cyan:       #06B6D4;
-      --cyan-light: #67E8F9;
-      --red-unsa:   #EF4444;
-      --red-dark:   #991B1B;
-      --green:      #22C55E;
-      --amber:      #F59E0B;
-      --purple:     #A855F7;
-      --text-main:  #E2E8F0;
-      --text-muted: #94A3B8;
-      --border:     rgba(6,182,212,0.25);
-      --glow-cyan:  0 0 20px rgba(6,182,212,0.4);
-      --glow-red:   0 0 20px rgba(239,68,68,0.4);
+      --bg:        #f7f9fc;
+      --bg2:       #eef2f8;
+      --white:     #ffffff;
+      --blue:      #2563EB;
+      --blue-lt:   #3B82F6;
+      --blue-pale: #EFF6FF;
+      --red:       #DC2626;
+      --red-pale:  #FEF2F2;
+      --green:     #16A34A;
+      --green-pale:#F0FDF4;
+      --amber:     #D97706;
+      --amber-pale:#FFFBEB;
+      --purple:    #7C3AED;
+      --purple-pale:#F5F3FF;
+      --gray1:     #1E293B;
+      --gray2:     #334155;
+      --gray3:     #64748B;
+      --gray4:     #CBD5E1;
+      --gray5:     #F1F5F9;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+      --shadow:    0 4px 16px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.05);
+      --shadow-lg: 0 8px 32px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.06);
     }
 
-    /* ═══════════════════════════════════════════════
-       FONDO ANIMADO — CUADRÍCULA TÁCTICA
-    ═══════════════════════════════════════════════ */
-    .reveal { font-family: 'Inter', sans-serif; }
+    /* ── FONDO GENERAL ───────────────────────────────────── */
+    body {
+      background: var(--bg);
+      font-family: 'Poppins', sans-serif;
+    }
 
-    .reveal .slides { background: transparent; }
-
+    /* Fondo decorativo: círculos difusos de color */
     body::before {
       content: '';
       position: fixed; inset: 0; z-index: -2;
-      background: var(--bg-deep);
+      background:
+        radial-gradient(ellipse 55% 45% at 8% 12%,  rgba(37,99,235,0.07)  0%, transparent 70%),
+        radial-gradient(ellipse 40% 50% at 92% 80%, rgba(220,38,38,0.06)  0%, transparent 70%),
+        radial-gradient(ellipse 50% 40% at 50% 50%, rgba(124,58,237,0.04) 0%, transparent 70%),
+        linear-gradient(160deg, #f7f9fc 0%, #edf1f9 100%);
     }
 
+    /* Patrón de puntos sutil */
     body::after {
       content: '';
       position: fixed; inset: 0; z-index: -1;
-      background-image:
-        radial-gradient(ellipse 60% 50% at 20% 50%, rgba(6,182,212,0.08) 0%, transparent 60%),
-        radial-gradient(ellipse 50% 60% at 80% 20%, rgba(153,27,27,0.07) 0%, transparent 60%),
-        linear-gradient(rgba(6,182,212,0.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(6,182,212,0.04) 1px, transparent 1px);
-      background-size: 100% 100%, 100% 100%, 48px 48px, 48px 48px;
-      animation: gridPulse 8s ease-in-out infinite alternate;
+      background-image: radial-gradient(circle, rgba(37,99,235,0.08) 1px, transparent 1px);
+      background-size: 32px 32px;
+      opacity: 0.6;
     }
 
-    @keyframes gridPulse {
-      0%  { opacity: 0.6; }
-      100%{ opacity: 1.0; }
-    }
-
-    /* Nodos animados sobre la cuadrícula */
-    .bg-nodes {
-      position: fixed; inset: 0; z-index: -1; pointer-events: none;
-      overflow: hidden;
-    }
-    .bg-node {
-      position: absolute;
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: var(--cyan);
-      box-shadow: 0 0 8px var(--cyan);
-      animation: nodePulse 3s ease-in-out infinite alternate;
-    }
-    @keyframes nodePulse {
-      0%  { opacity: 0.3; transform: scale(1); }
-      100%{ opacity: 0.9; transform: scale(1.5); }
-    }
-
-    /* ═══════════════════════════════════════════════
-       TIPOGRAFÍA BASE
-    ═══════════════════════════════════════════════ */
-    .reveal h1, .reveal h2, .reveal h3, .reveal h4 {
-      font-family: 'Inter', sans-serif;
-      color: var(--text-main);
-      text-transform: none;
-      letter-spacing: -0.02em;
-    }
-    .reveal p, .reveal li, .reveal td, .reveal th {
-      color: var(--text-main);
-      font-size: 0.9em;
-    }
+    /* ── REVEAL BASE ─────────────────────────────────────── */
+    .reveal { font-family: 'Poppins', sans-serif; }
+    .reveal .slides { background: transparent; }
     .reveal .slides section { background: transparent; }
 
-    /* ═══════════════════════════════════════════════
-       GLASSMORPHISM CARDS
-    ═══════════════════════════════════════════════ */
-    .glass {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      padding: 1.4em 1.6em;
-      box-shadow: 0 4px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
-    }
-    .glass-cyan {
-      background: var(--bg-card2);
-      border: 1px solid rgba(6,182,212,0.4);
-      border-radius: 12px;
-      backdrop-filter: blur(12px);
-      padding: 1em 1.4em;
-      box-shadow: var(--glow-cyan);
-    }
-    .glass-red {
-      background: rgba(239,68,68,0.06);
-      border: 1px solid rgba(239,68,68,0.3);
-      border-radius: 12px;
-      backdrop-filter: blur(12px);
-      padding: 1em 1.4em;
-      box-shadow: var(--glow-red);
-    }
-
-    /* ═══════════════════════════════════════════════
-       BADGE DE EXPOSITOR
-    ═══════════════════════════════════════════════ */
-    .expositor-badge {
-      position: absolute;
-      top: 14px; right: 18px;
-      background: rgba(6,182,212,0.12);
-      border: 1px solid rgba(6,182,212,0.35);
-      border-radius: 20px;
-      padding: 4px 14px;
-      font-size: 0.6em;
-      font-weight: 600;
-      color: var(--cyan-light);
-      letter-spacing: 0.03em;
-      z-index: 10;
-    }
-    .expositor-badge .time { color: var(--amber); margin-left: 8px; }
-
-    /* ═══════════════════════════════════════════════
-       SLIDE TITLE BAR
-    ═══════════════════════════════════════════════ */
-    .slide-num {
-      display: inline-block;
-      background: linear-gradient(135deg, var(--cyan), #0E7490);
-      color: #fff;
-      border-radius: 8px;
-      padding: 2px 10px;
-      font-size: 0.55em;
+    .reveal h1, .reveal h2, .reveal h3, .reveal h4 {
+      font-family: 'Poppins', sans-serif;
+      color: var(--gray1);
+      text-transform: none;
+      letter-spacing: -0.02em;
       font-weight: 700;
-      vertical-align: middle;
-      margin-right: 10px;
+      text-shadow: none;
     }
-    .slide-title-line {
+    .reveal p, .reveal li { color: var(--gray2); font-size: 0.88em; }
+    .reveal td, .reveal th { color: var(--gray2); }
+
+    .reveal .progress span { background: var(--blue); }
+    .reveal .progress { height: 3px; background: var(--gray4); }
+    .reveal .controls button { color: var(--blue); }
+    .reveal .slide-number { color: var(--gray3); font-size: 0.6em; }
+
+    /* ── CARDS BLANCAS ───────────────────────────────────── */
+    .card {
+      background: var(--white);
+      border: 1px solid var(--gray4);
+      border-radius: 14px;
+      padding: 1.1em 1.4em;
+      box-shadow: var(--shadow);
+    }
+    .card-blue  { background: var(--blue-pale);   border-color: rgba(37,99,235,0.2); }
+    .card-red   { background: var(--red-pale);    border-color: rgba(220,38,38,0.2); }
+    .card-green { background: var(--green-pale);  border-color: rgba(22,163,74,0.2); }
+    .card-amber { background: var(--amber-pale);  border-color: rgba(217,119,6,0.2); }
+    .card-purple{ background: var(--purple-pale); border-color: rgba(124,58,237,0.2); }
+    .card-gray  { background: var(--gray5);       border-color: var(--gray4); }
+
+    /* ── SLIDE HEADER ────────────────────────────────────── */
+    .slide-header {
       display: flex;
       align-items: center;
-      gap: 8px;
-      margin-bottom: 0.6em;
+      gap: 10px;
+      margin-bottom: 0.5em;
     }
-    .accent-line {
-      width: 48px; height: 3px;
-      background: linear-gradient(90deg, var(--cyan), transparent);
+    .slide-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      background: var(--blue);
+      color: #fff;
+      font-size: 0.75em;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .slide-header h2 {
+      font-size: 1.25em;
+      margin: 0;
+      color: var(--gray1);
+    }
+    .divider {
+      height: 3px;
       border-radius: 2px;
+      background: linear-gradient(90deg, var(--blue), rgba(37,99,235,0.1));
       margin-bottom: 0.8em;
     }
 
-    /* ═══════════════════════════════════════════════
-       UTILIDADES DE COLOR
-    ═══════════════════════════════════════════════ */
-    .c-cyan   { color: var(--cyan); }
-    .c-red    { color: var(--red-unsa); }
-    .c-green  { color: var(--green); }
-    .c-amber  { color: var(--amber); }
-    .c-purple { color: var(--purple); }
-    .c-muted  { color: var(--text-muted); }
-    .fw-bold  { font-weight: 700; }
-    .fw-900   { font-weight: 900; }
-    .mono     { font-family: 'JetBrains Mono', monospace; }
+    /* ── GRIDS ───────────────────────────────────────────── */
+    .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.9em; }
+    .g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.7em; }
+    .g4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 0.6em; }
 
-    /* ═══════════════════════════════════════════════
-       GRID LAYOUTS
-    ═══════════════════════════════════════════════ */
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1em; }
-    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.8em; }
-    .grid-4 { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 0.7em; }
-
-    /* ═══════════════════════════════════════════════
-       METRIC CARDS
-    ═══════════════════════════════════════════════ */
-    .metric-card {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(6,182,212,0.2);
+    /* ── METRIC TILES ────────────────────────────────────── */
+    .tile {
+      background: var(--white);
+      border: 1px solid var(--gray4);
       border-radius: 12px;
-      padding: 0.9em 1em;
+      padding: 0.8em 0.6em;
       text-align: center;
+      box-shadow: var(--shadow-sm);
     }
-    .metric-card .metric-val {
-      font-size: 2em;
-      font-weight: 900;
-      color: var(--cyan);
+    .tile .val {
+      font-size: 1.9em;
+      font-weight: 800;
+      color: var(--blue);
       line-height: 1.1;
     }
-    .metric-card .metric-label {
-      font-size: 0.65em;
-      color: var(--text-muted);
-      margin-top: 0.2em;
+    .tile .lbl {
+      font-size: 0.6em;
+      color: var(--gray3);
       text-transform: uppercase;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.06em;
+      margin-top: 2px;
     }
 
-    /* ═══════════════════════════════════════════════
-       WINDOW FRAME (para screenshots)
-    ═══════════════════════════════════════════════ */
-    .app-window {
+    /* ── APP WINDOW FRAME ───────────────────────────────── */
+    .win {
       border-radius: 12px;
       overflow: hidden;
-      border: 1px solid rgba(6,182,212,0.3);
-      box-shadow: 0 8px 48px rgba(0,0,0,0.7), 0 0 32px rgba(6,182,212,0.15);
+      border: 1px solid var(--gray4);
+      box-shadow: var(--shadow-lg);
       cursor: zoom-in;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      transition: transform 0.25s, box-shadow 0.25s;
     }
-    .app-window:hover {
-      transform: scale(1.02);
-      box-shadow: 0 12px 64px rgba(0,0,0,0.8), 0 0 48px rgba(6,182,212,0.3);
+    .win:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 16px 40px rgba(0,0,0,0.15);
     }
-    .app-window-bar {
-      background: #1a1f2e;
-      padding: 8px 14px;
+    .win-bar {
+      background: #f0f2f5;
+      padding: 7px 12px;
       display: flex;
       align-items: center;
-      gap: 7px;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
+      gap: 6px;
+      border-bottom: 1px solid var(--gray4);
     }
-    .wdot { width: 12px; height: 12px; border-radius: 50%; }
-    .wdot.red   { background: #FF5F57; }
-    .wdot.amber { background: #FEBC2E; }
-    .wdot.green { background: #28C840; }
-    .wbar-title {
-      font-size: 0.65em;
-      color: var(--text-muted);
-      margin-left: 8px;
-      font-family: 'JetBrains Mono', monospace;
+    .dot { width: 11px; height: 11px; border-radius: 50%; }
+    .dot.r { background: #FF5F57; }
+    .dot.a { background: #FEBC2E; }
+    .dot.g { background: #28C840; }
+    .win-title {
+      font-size: 0.6em;
+      color: var(--gray3);
+      margin-left: 6px;
+      font-family: 'Fira Code', monospace;
     }
-    .app-window img { width: 100%; display: block; }
+    .win img { width: 100%; display: block; }
 
-    /* ═══════════════════════════════════════════════
-       LIGHTBOX
-    ═══════════════════════════════════════════════ */
-    #lightbox {
-      display: none; position: fixed; inset: 0; z-index: 9999;
-      background: rgba(0,0,0,0.92);
+    /* ── LIGHTBOX ────────────────────────────────────────── */
+    #lb {
+      display: none;
+      position: fixed; inset: 0; z-index: 9999;
+      background: rgba(15,23,42,0.88);
       align-items: center; justify-content: center;
       cursor: zoom-out;
     }
-    #lightbox.active { display: flex; }
-    #lightbox img {
-      max-width: 94vw; max-height: 94vh;
+    #lb.on { display: flex; }
+    #lb img {
+      max-width: 94vw; max-height: 92vh;
       border-radius: 10px;
-      border: 2px solid rgba(6,182,212,0.5);
-      box-shadow: 0 0 60px rgba(6,182,212,0.3);
+      border: 2px solid #fff;
+      box-shadow: 0 20px 80px rgba(0,0,0,0.5);
     }
 
-    /* ═══════════════════════════════════════════════
-       CODE BLOCKS
-    ═══════════════════════════════════════════════ */
+    /* ── CODE ────────────────────────────────────────────── */
     .reveal pre {
       margin: 0;
       border-radius: 10px;
-      border: 1px solid rgba(6,182,212,0.2);
-      box-shadow: none;
-      font-size: 0.72em;
+      border: 1px solid var(--gray4);
+      box-shadow: var(--shadow-sm);
+      font-size: 0.7em;
     }
     .reveal pre code {
-      font-family: 'JetBrains Mono', monospace;
+      font-family: 'Fira Code', monospace;
       border-radius: 10px;
-      padding: 1em 1.2em !important;
-      max-height: 320px;
+      padding: 0.9em 1.1em !important;
+      max-height: 310px;
       overflow-y: auto;
+      background: #f8fafc;
+      color: var(--gray1);
     }
 
-    /* ═══════════════════════════════════════════════
-       PROGRESS BAR OVERRIDE
-    ═══════════════════════════════════════════════ */
-    .reveal .progress { height: 3px; }
-    .reveal .progress span { background: var(--cyan); }
+    /* ── BADGES / PILLS ─────────────────────────────────── */
+    .pill {
+      display: inline-block;
+      border-radius: 20px;
+      padding: 3px 12px;
+      font-size: 0.65em;
+      font-weight: 600;
+    }
+    .pill-blue   { background: var(--blue-pale);   color: var(--blue); }
+    .pill-red    { background: var(--red-pale);    color: var(--red); }
+    .pill-green  { background: var(--green-pale);  color: var(--green); }
+    .pill-amber  { background: var(--amber-pale);  color: var(--amber); }
+    .pill-purple { background: var(--purple-pale); color: var(--purple); }
 
-    /* ═══════════════════════════════════════════════
-       PATTERN BOXES (GoF)
-    ═══════════════════════════════════════════════ */
-    .pattern-box {
-      background: rgba(168,85,247,0.08);
-      border: 1px solid rgba(168,85,247,0.3);
-      border-radius: 10px;
-      padding: 0.7em 1em;
+    /* ── TREE ────────────────────────────────────────────── */
+    .tree { font-family: 'Fira Code', monospace; font-size: 0.74em; line-height: 1.6; }
+    .t-abs  { color: var(--amber); font-weight: 600; }
+    .t-con  { color: var(--blue);  font-weight: 500; }
+    .t-muted{ color: var(--gray3); }
+
+    /* ── MVC BOXES ───────────────────────────────────────── */
+    .mvc {
+      display: flex; align-items: stretch;
+      gap: 0; border-radius: 12px; overflow: hidden;
+      border: 1px solid var(--gray4);
+      box-shadow: var(--shadow-sm);
+    }
+    .mvc-col {
+      flex: 1; padding: 0.8em 0.6em;
+      text-align: center; font-size: 0.72em;
+    }
+    .mvc-m { background: var(--green-pale); border-right: 1px solid var(--gray4); }
+    .mvc-c { background: var(--blue-pale);  border-right: 1px solid var(--gray4); }
+    .mvc-v { background: var(--purple-pale);}
+    .mvc-label { font-weight: 700; font-size: 1.1em; margin-bottom: 4px; }
+    .mvc-items { color: var(--gray3); font-size: 0.85em; line-height: 1.5; }
+
+    /* ── PATTERN BOX ─────────────────────────────────────── */
+    .pat {
+      border-left: 4px solid var(--blue);
+      background: var(--white);
+      border-radius: 0 10px 10px 0;
+      padding: 0.6em 0.9em;
+      box-shadow: var(--shadow-sm);
       margin-bottom: 0.5em;
     }
-    .pattern-box .pname {
-      font-weight: 700;
-      color: var(--purple);
-      font-size: 0.85em;
-    }
-    .pattern-box .pdesc {
-      color: var(--text-muted);
-      font-size: 0.72em;
-      margin-top: 0.2em;
-    }
+    .pat .pn { font-weight: 700; color: var(--blue);  font-size: 0.8em; }
+    .pat .pd { color: var(--gray3); font-size: 0.68em; margin-top: 2px; }
 
-    /* ═══════════════════════════════════════════════
-       MVC DIAGRAM (SVG-CSS)
-    ═══════════════════════════════════════════════ */
-    .mvc-diagram {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0;
-      margin: 0.4em 0;
+    /* ── P/C DIAGRAM ─────────────────────────────────────── */
+    .pc-row { display: flex; align-items: center; gap: 0.5em; }
+    .pc-box {
+      border-radius: 10px; padding: 0.6em 0.8em;
+      font-size: 0.7em; font-weight: 600; text-align: center; flex: 1;
     }
-    .mvc-box {
+    .pc-prod { background: var(--amber-pale); border: 1px solid rgba(217,119,6,0.3); color: var(--amber); }
+    .pc-queue{ background: var(--blue-pale);  border: 1px solid rgba(37,99,235,0.3);  color: var(--blue); }
+    .pc-cons { background: var(--green-pale); border: 1px solid rgba(22,163,74,0.3);  color: var(--green); }
+    .pc-arr  { font-size: 1.3em; color: var(--gray3); flex: 0; }
+
+    /* ── TEST BARS ───────────────────────────────────────── */
+    .suite {
+      background: var(--white);
+      border: 1px solid var(--gray4);
       border-radius: 10px;
-      padding: 0.6em 1.2em;
-      text-align: center;
-      font-weight: 700;
-      font-size: 0.75em;
-      min-width: 120px;
+      padding: 0.7em 1em;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 0.5em;
     }
-    .mvc-m { background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.4); color: var(--green); }
-    .mvc-v { background: rgba(6,182,212,0.15); border: 1px solid rgba(6,182,212,0.4); color: var(--cyan); }
-    .mvc-c { background: rgba(168,85,247,0.15); border: 1px solid rgba(168,85,247,0.4); color: var(--purple); }
-    .mvc-arrow {
-      font-size: 1.3em;
-      color: var(--text-muted);
-      padding: 0 8px;
+    .suite .sn { font-weight: 600; color: var(--green); font-size: 0.8em; }
+    .suite .bar {
+      background: var(--gray5);
+      border-radius: 20px; height: 7px; margin: 5px 0 3px;
     }
-    .mvc-sub {
-      font-size: 0.6em;
-      font-weight: 400;
-      color: var(--text-muted);
-      margin-top: 4px;
+    .suite .fill {
+      height: 100%; border-radius: 20px;
+      background: linear-gradient(90deg, var(--green), #4ADE80);
+      animation: grow 1.4s ease-out forwards;
+      width: 0;
     }
+    @keyframes grow { to { width: 100%; } }
+    .suite .sm { font-size: 0.62em; color: var(--gray3); }
 
-    /* ═══════════════════════════════════════════════
-       HIERARCHY TREE
-    ═══════════════════════════════════════════════ */
-    .tree { font-family: 'JetBrains Mono', monospace; font-size: 0.75em; }
-    .tree-abstract { color: var(--amber); font-weight: 700; }
-    .tree-concrete { color: var(--cyan); }
-    .tree-line { color: var(--text-muted); }
-
-    /* ═══════════════════════════════════════════════
-       SLIDE 1 — PORTADA
-    ═══════════════════════════════════════════════ */
-    .portada-logo {
-      font-size: 3.6em;
-      line-height: 1;
-      text-shadow: 0 0 40px rgba(6,182,212,0.6);
-    }
-    .portada-title {
-      font-size: 2.3em;
-      font-weight: 900;
-      background: linear-gradient(135deg, var(--cyan-light), var(--cyan), #0EA5E9);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+    /* ── PORTADA ESPECÍFICA ──────────────────────────────── */
+    .cover-title {
+      font-size: 2.4em;
+      font-weight: 800;
+      color: var(--blue);
       letter-spacing: -0.03em;
       line-height: 1.1;
     }
-    .portada-subtitle {
-      font-size: 0.95em;
-      color: var(--text-muted);
-      margin-top: 0.3em;
+    .cover-sub {
+      font-size: 0.9em;
+      color: var(--gray3);
+      font-weight: 400;
     }
-    .portada-unsa {
-      display: inline-block;
-      background: linear-gradient(135deg, #991B1B, #EF4444);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      font-weight: 700;
-    }
-    .author-pill {
+    .author-row {
       display: inline-flex;
       align-items: center;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid rgba(6,182,212,0.2);
+      gap: 7px;
+      background: var(--white);
+      border: 1px solid var(--gray4);
       border-radius: 24px;
-      padding: 6px 18px;
-      font-size: 0.72em;
-      color: var(--text-muted);
-      margin: 4px;
+      padding: 5px 16px;
+      font-size: 0.7em;
+      color: var(--gray2);
+      margin: 3px;
+      box-shadow: var(--shadow-sm);
     }
-    .author-pill .dot {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: var(--cyan);
-      margin-right: 8px;
-      flex-shrink: 0;
+    .adot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--blue); flex-shrink: 0;
     }
 
-    /* ═══════════════════════════════════════════════
-       CONCURRENCY DIAGRAM
-    ═══════════════════════════════════════════════ */
-    .conc-box {
-      border-radius: 10px;
-      padding: 0.6em 0.8em;
-      font-size: 0.72em;
-      text-align: center;
-      font-weight: 600;
-    }
-    .conc-producer { background: rgba(245,158,11,0.15); border: 1px solid rgba(245,158,11,0.4); color: var(--amber); }
-    .conc-queue    { background: rgba(6,182,212,0.12); border: 1px solid rgba(6,182,212,0.4); color: var(--cyan); }
-    .conc-consumer { background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.4); color: var(--green); }
-    .conc-arrow {
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.5em; color: var(--text-muted);
-    }
-
-    /* ═══════════════════════════════════════════════
-       BADGE DE ÉXITO (TEST SUITE)
-    ═══════════════════════════════════════════════ */
-    .test-suite {
-      background: rgba(34,197,94,0.08);
-      border: 1px solid rgba(34,197,94,0.3);
-      border-radius: 12px;
-      padding: 0.8em 1.2em;
-      margin: 0.4em 0;
-    }
-    .test-suite .ts-name { font-weight: 700; color: var(--green); font-size: 0.85em; }
-    .test-suite .ts-bar {
-      background: rgba(255,255,255,0.08);
-      border-radius: 20px;
-      height: 8px;
-      margin: 6px 0 4px;
-      overflow: hidden;
-    }
-    .test-suite .ts-fill {
-      height: 100%;
-      border-radius: 20px;
-      background: linear-gradient(90deg, var(--green), #16A34A);
-      animation: fillBar 1.5s ease-out forwards;
-      width: 0%;
-    }
-    @keyframes fillBar { to { width: 100%; } }
-    .test-suite .ts-meta { font-size: 0.65em; color: var(--text-muted); }
-
-    /* ═══════════════════════════════════════════════
-       REVEAL OVERRIDES
-    ═══════════════════════════════════════════════ */
-    .reveal .slide-number { color: var(--text-muted); font-size: 0.6em; }
-    .reveal .controls { color: var(--cyan); }
-    .reveal section.present { z-index: 1; }
-
-    /* Fragment animations */
-    .reveal .fragment.fade-up {
-      transform: translateY(30px);
-      transition: transform 0.4s ease, opacity 0.4s ease;
-    }
-    .reveal .fragment.fade-up.visible { transform: translateY(0); }
+    /* ── UTILIDADES ──────────────────────────────────────── */
+    .c-blue   { color: var(--blue); }
+    .c-red    { color: var(--red); }
+    .c-green  { color: var(--green); }
+    .c-amber  { color: var(--amber); }
+    .c-purple { color: var(--purple); }
+    .c-muted  { color: var(--gray3); }
+    .fw7 { font-weight: 700; }
+    .fw8 { font-weight: 800; }
+    .mono { font-family: 'Fira Code', monospace; }
+    .txt-sm  { font-size: 0.72em; }
+    .txt-xs  { font-size: 0.63em; }
+    .txt-xxs { font-size: 0.58em; }
+    .mt4 { margin-top: 0.4em; }
+    .mt6 { margin-top: 0.6em; }
   </style>
 </head>
 <body>
 
-<!-- Nodos de fondo animados -->
-<div class="bg-nodes" id="bgNodes"></div>
-
-<!-- Lightbox -->
-<div id="lightbox" onclick="closeLightbox()">
-  <img id="lbImg" src="" alt="Captura SIGER" />
+<div id="lb" onclick="closeLb()">
+  <img id="lbImg" src="" alt="" />
 </div>
 
 <div class="reveal">
   <div class="slides">
 
-    <!-- ══════════════════════════════════════════════
-         SLIDE 1 — PORTADA
-    ══════════════════════════════════════════════ -->
-    <section data-transition="zoom">
-      <div class="expositor-badge">
-        German Arturo Chipana Jeronimo
-        <span class="time">⏱ ~1 min</span>
-      </div>
+    <!-- ══════════════════════
+         01 — PORTADA
+    ══════════════════════════ -->
+    <section data-transition="fade">
+      <div style="text-align:center; padding: 0.2em 0;">
 
-      <div style="text-align:center; padding: 0.5em 0;">
-        <div class="portada-logo">🚚</div>
+        <div style="margin-bottom:0.3em;">
+          <span style="font-size:3.2em;">🚚</span>
+        </div>
 
-        <div class="portada-title" style="margin-top:0.3em;">SIGER</div>
-        <div style="font-size:1.05em; color: var(--text-muted); margin-top:-0.1em; font-weight:500; letter-spacing:0.02em;">
+        <div class="cover-title">SIGER</div>
+        <div class="cover-sub" style="margin-top:0.1em;">
           Sistema Integrado de Gestión y Simulación de Entregas Rápidas
         </div>
 
-        <div class="glass" style="display:inline-block; margin: 1em 0; padding: 0.6em 2em;">
-          <span style="font-size:0.75em; color:var(--text-muted);">Trabajo Final de Curso —</span>
-          <span class="portada-unsa" style="font-size:0.85em; margin-left:6px;">Tecnología de Objetos · UNSA</span>
-          <span style="font-size:0.7em; color:var(--text-muted); margin-left:6px;">Arequipa, 2026</span>
+        <div style="margin: 0.9em 0 0.5em;">
+          <span class="pill pill-red" style="font-size:0.75em; padding:5px 16px;">
+            Trabajo Final — Tecnología de Objetos &nbsp;·&nbsp; UNSA Arequipa 2026
+          </span>
         </div>
 
-        <div style="margin: 0.6em 0 0.4em; font-size:0.65em; color:var(--text-muted); letter-spacing:0.08em; text-transform:uppercase;">Equipo de Desarrollo</div>
-
-        <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:0.3em; max-width:800px; margin:0 auto;">
-          <div class="author-pill"><div class="dot"></div>German Arturo Chipana Jeronimo</div>
-          <div class="author-pill"><div class="dot" style="background:var(--red-unsa)"></div>Leonardo Juan Jose Baca Calsin</div>
-          <div class="author-pill"><div class="dot" style="background:var(--green)"></div>Giovanni Patrick Mejia Rondan</div>
-          <div class="author-pill"><div class="dot" style="background:var(--purple)"></div>Renato Xavier Ponce Llerena</div>
+        <div style="display:flex; flex-wrap:wrap; justify-content:center; gap:4px; margin: 0.6em 0 1em;">
+          <div class="author-row"><div class="adot"></div>German Arturo Chipana Jeronimo</div>
+          <div class="author-row"><div class="adot" style="background:var(--red)"></div>Leonardo Juan Jose Baca Calsin</div>
+          <div class="author-row"><div class="adot" style="background:var(--green)"></div>Giovanni Patrick Mejia Rondan</div>
+          <div class="author-row"><div class="adot" style="background:var(--purple)"></div>Renato Xavier Ponce Llerena</div>
         </div>
 
-        <div style="margin-top: 1.2em;" class="grid-4">
-          <div class="metric-card"><div class="metric-val">5</div><div class="metric-label">Patrones GoF</div></div>
-          <div class="metric-card"><div class="metric-val">94</div><div class="metric-label">Test Assertions</div></div>
-          <div class="metric-card"><div class="metric-val">870</div><div class="metric-label">Rutas Viales AQP</div></div>
-          <div class="metric-card"><div class="metric-val c-green">100%</div><div class="metric-label">Test Pass Rate</div></div>
+        <div class="g4" style="max-width:680px; margin:0 auto;">
+          <div class="tile"><div class="val">5</div><div class="lbl">Patrones GoF</div></div>
+          <div class="tile"><div class="val">94</div><div class="lbl">Pruebas Unitarias</div></div>
+          <div class="tile"><div class="val">870</div><div class="lbl">Rutas Viales AQP</div></div>
+          <div class="tile"><div class="val c-green">100%</div><div class="lbl">Test Pass Rate</div></div>
         </div>
       </div>
 
       <aside class="notes">
-        Bienvenidos. Soy German Chipana. Hoy vamos a presentar SIGER: un sistema de simulación logística multihilo con enrutamiento vial real por las calles de Arequipa, desarrollado en C++17 y Qt6. El proyecto implementa 5 patrones GoF, plantillas genéricas propias, concurrencia con exclusión mutua y una interfaz gráfica tipo cockpit de control de misión.
+        Presentación del equipo y del proyecto SIGER. Sistema desarrollado en C++17 y Qt6 con concurrencia multihilo, 5 patrones GoF, enrutamiento real por calles de Arequipa usando OSRM.
       </aside>
     </section>
 
-    <!-- ══════════════════════════════════════════════
-         SLIDE 2 — PROBLEMÁTICA Y SOLUCIÓN
-    ══════════════════════════════════════════════ -->
+    <!-- ══════════════════════
+         02 — PROBLEMÁTICA
+    ══════════════════════════ -->
     <section data-transition="slide">
-      <div class="expositor-badge">German Arturo Chipana Jeronimo <span class="time">⏱ ~1 min</span></div>
-
-      <div class="slide-title-line">
-        <span class="slide-num">02</span>
-        <h2 style="font-size:1.3em; margin:0;">Problemática y Solución Propuesta</h2>
+      <div class="slide-header">
+        <div class="slide-num">02</div>
+        <h2>Problemática y Solución Propuesta</h2>
       </div>
-      <div class="accent-line"></div>
+      <div class="divider"></div>
 
-      <div class="grid-2" style="gap:1.2em;">
+      <div class="g2">
         <div>
-          <div class="glass-red fragment fade-up" style="margin-bottom:0.7em;">
-            <div style="font-size:0.85em; font-weight:700; color:var(--red-unsa);">⚠️ El Problema — Última Milla en Arequipa</div>
-            <ul style="margin:0.5em 0 0; font-size:0.72em; color:var(--text-muted); padding-left:1.2em;">
-              <li>Las empresas de delivery urbano gestionan decenas de pedidos <strong style="color:var(--text-main)">simultáneos</strong> sin herramientas de optimización.</li>
-              <li>Asignación manual de repartidores genera <strong style="color:var(--red-unsa)">cuellos de botella</strong>, demoras y pérdida de productividad.</li>
+          <div class="card card-red fragment fade-up" style="margin-bottom:0.7em;">
+            <div class="txt-sm fw7 c-red" style="margin-bottom:0.4em;">⚠️ El Problema — Gestión de Delivery Urbano</div>
+            <ul style="margin:0; padding-left:1.1em;" class="txt-sm">
+              <li>Asignación <strong>manual</strong> de repartidores sin optimización.</li>
               <li>Sin visibilidad en tiempo real del estado de la flota.</li>
+              <li>Pedidos simultáneos compiten sin priorización por tipo de vehículo.</li>
             </ul>
           </div>
-          <div class="glass-cyan fragment fade-up">
-            <div style="font-size:0.85em; font-weight:700; color:var(--cyan);">✅ SIGER — Sistema Integrado de Entregas</div>
-            <ul style="margin:0.5em 0 0; font-size:0.72em; color:var(--text-muted); padding-left:1.2em;">
-              <li>Simulación multihilo de flota <strong style="color:var(--text-main)">(Moto, Auto, Camión)</strong> con asignación automática y balanceo de carga.</li>
-              <li>Enrutamiento por calles reales de Arequipa vía <strong style="color:var(--cyan)">OSRM (870 rutas precalculadas)</strong>.</li>
-              <li>Cockpit visual interactivo con telemetría en tiempo real.</li>
+          <div class="card card-blue fragment fade-up">
+            <div class="txt-sm fw7 c-blue" style="margin-bottom:0.4em;">✅ SIGER — Lo que implementamos</div>
+            <ul style="margin:0; padding-left:1.1em;" class="txt-sm">
+              <li>Asignación automática según tipo de vehículo y peso del paquete.</li>
+              <li>Simulación multihilo real: <strong>un hilo por repartidor</strong>.</li>
+              <li>Rutas por calles reales de Arequipa — 870 rutas viales OSRM offline.</li>
             </ul>
           </div>
         </div>
 
         <div class="fragment fade-up">
-          <div class="app-window" onclick="openLightbox('../../img/Captura de pantalla 2026-11-16 163914.png')">
-            <div class="app-window-bar">
-              <div class="wdot red"></div><div class="wdot amber"></div><div class="wdot green"></div>
-              <span class="wbar-title">SIGER.exe — Panel Principal + Mapa AQP</span>
+          <div class="win" onclick="openLb('../../img/Captura de pantalla 2026-11-16 163914.png')">
+            <div class="win-bar">
+              <div class="dot r"></div><div class="dot a"></div><div class="dot g"></div>
+              <span class="win-title">SIGER.exe — Panel Principal</span>
             </div>
-            <img src="../../img/Captura de pantalla 2026-11-16 163914.png" alt="SIGER — Panel principal" />
+            <img src="../../img/Captura de pantalla 2026-11-16 163914.png" alt="SIGER Panel Principal" />
           </div>
-          <p style="font-size:0.58em; color:var(--text-muted); text-align:center; margin-top:4px;">🔍 Click para ampliar</p>
+          <p class="txt-xxs c-muted" style="text-align:center; margin-top:4px;">Click para ampliar</p>
         </div>
       </div>
 
       <aside class="notes">
-        El problema que enfrentan las empresas de delivery en Arequipa es gestionar múltiples pedidos simultáneos sin una herramienta que asigne repartidores automáticamente y muestre su posición en tiempo real. SIGER resuelve esto con concurrencia real —un hilo por repartidor— y rutas por calles reales descargadas de OSRM.
+        El problema es la gestión ineficiente de pedidos simultáneos. SIGER lo resuelve con concurrencia real y rutas viales reales de Arequipa.
       </aside>
     </section>
 
-    <!-- ══════════════════════════════════════════════
-         SLIDE 3 — ARQUITECTURA GLOBAL MVC
-    ══════════════════════════════════════════════ -->
+    <!-- ══════════════════════
+         03 — ARQUITECTURA MVC
+    ══════════════════════════ -->
     <section data-transition="slide">
-      <div class="expositor-badge">German Arturo Chipana Jeronimo <span class="time">⏱ ~1 min</span></div>
-
-      <div class="slide-title-line">
-        <span class="slide-num">03</span>
-        <h2 style="font-size:1.3em; margin:0;">Arquitectura del Sistema — MVC + Stack Tecnológico</h2>
+      <div class="slide-header">
+        <div class="slide-num">03</div>
+        <h2>Arquitectura MVC y Stack Tecnológico</h2>
       </div>
-      <div class="accent-line"></div>
+      <div class="divider"></div>
 
-      <!-- MVC Diagram -->
-      <div class="glass fragment fade-up" style="margin-bottom: 0.8em;">
-        <div style="font-size:0.72em; color:var(--text-muted); margin-bottom:0.5em; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Patrón Arquitectónico</div>
-        <div class="mvc-diagram">
-          <div class="mvc-box mvc-m">
-            🗄️ MODELO
-            <div class="mvc-sub">GestorPedidos<br>SimuladorEntregas<br>Cola&lt;T&gt; · Repositorio&lt;T&gt;</div>
-          </div>
-          <div class="mvc-arrow">⟷</div>
-          <div class="mvc-box mvc-c">
-            ⚙️ CONTROLADOR
-            <div class="mvc-sub">PedidoController<br>SimulacionController<br>Señales Qt</div>
-          </div>
-          <div class="mvc-arrow">⟷</div>
-          <div class="mvc-box mvc-v">
-            🖥️ VISTA
-            <div class="mvc-sub">MainWindow · MapaView<br>DashboardView · FlotaView<br>EstadisticasView</div>
-          </div>
+      <div class="mvc fragment fade-up" style="margin-bottom:0.8em;">
+        <div class="mvc-col mvc-m">
+          <div class="mvc-label c-green">🗄️ MODELO</div>
+          <div class="mvc-items">GestorPedidos<br>SimuladorEntregas<br>Cola&lt;T&gt; · Repositorio&lt;T&gt;</div>
+        </div>
+        <div style="display:flex;align-items:center;padding:0 8px;color:var(--gray3);font-size:1.1em;">⟷</div>
+        <div class="mvc-col mvc-c">
+          <div class="mvc-label c-blue">⚙️ CONTROLADOR</div>
+          <div class="mvc-items">PedidoController<br>SimulacionController<br>Señales Qt (Signals/Slots)</div>
+        </div>
+        <div style="display:flex;align-items:center;padding:0 8px;color:var(--gray3);font-size:1.1em;">⟷</div>
+        <div class="mvc-col mvc-v">
+          <div class="mvc-label c-purple">🖥️ VISTA</div>
+          <div class="mvc-items">MainWindow · MapaView<br>DashboardView · FlotaView<br>EstadisticasView</div>
         </div>
       </div>
 
-      <div class="grid-2 fragment fade-up">
-        <div>
-          <div style="font-size:0.72em; color:var(--text-muted); margin-bottom:0.5em; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Stack Tecnológico</div>
-          <div class="grid-2" style="gap:0.5em;">
-            <div class="glass-cyan" style="padding:0.6em 0.8em; text-align:center;">
-              <div style="font-size:1.3em;">⚡</div>
-              <div style="font-size:0.7em; font-weight:700; color:var(--cyan);">C++17</div>
-              <div style="font-size:0.58em; color:var(--text-muted);">GCC 13.1 / MinGW64</div>
+      <div class="g2">
+        <div class="fragment fade-up">
+          <div class="txt-xs c-muted fw7" style="text-transform:uppercase;letter-spacing:.07em;margin-bottom:.4em;">Stack Tecnológico</div>
+          <div class="g2" style="gap:0.5em;">
+            <div class="card card-blue" style="text-align:center;padding:.6em;">
+              <div style="font-size:1.2em;">⚡</div>
+              <div class="txt-sm fw7 c-blue">C++17</div>
+              <div class="txt-xxs c-muted">GCC 13.1 / MinGW64</div>
             </div>
-            <div class="glass-cyan" style="padding:0.6em 0.8em; text-align:center;">
-              <div style="font-size:1.3em;">🖼️</div>
-              <div style="font-size:0.7em; font-weight:700; color:var(--cyan);">Qt 6.12</div>
-              <div style="font-size:0.58em; color:var(--text-muted);">Widgets · Charts · QSS</div>
+            <div class="card card-blue" style="text-align:center;padding:.6em;">
+              <div style="font-size:1.2em;">🖼️</div>
+              <div class="txt-sm fw7 c-blue">Qt 6.12</div>
+              <div class="txt-xxs c-muted">Widgets · Charts · QSS</div>
             </div>
-            <div class="glass-cyan" style="padding:0.6em 0.8em; text-align:center;">
-              <div style="font-size:1.3em;">🗺️</div>
-              <div style="font-size:0.7em; font-weight:700; color:var(--cyan);">OSRM</div>
-              <div style="font-size:0.58em; color:var(--text-muted);">870 rutas AQP offline</div>
+            <div class="card card-blue" style="text-align:center;padding:.6em;">
+              <div style="font-size:1.2em;">🗺️</div>
+              <div class="txt-sm fw7 c-blue">OSRM</div>
+              <div class="txt-xxs c-muted">870 rutas AQP offline</div>
             </div>
-            <div class="glass-cyan" style="padding:0.6em 0.8em; text-align:center;">
-              <div style="font-size:1.3em;">🔧</div>
-              <div style="font-size:0.7em; font-weight:700; color:var(--cyan);">CMake + Ninja</div>
-              <div style="font-size:0.58em; color:var(--text-muted);">Build system · CTest</div>
+            <div class="card card-blue" style="text-align:center;padding:.6em;">
+              <div style="font-size:1.2em;">🔧</div>
+              <div class="txt-sm fw7 c-blue">CMake + Ninja</div>
+              <div class="txt-xxs c-muted">Build system · CTest</div>
             </div>
           </div>
         </div>
 
-        <div>
-          <div style="font-size:0.72em; color:var(--text-muted); margin-bottom:0.5em; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Métricas del Proyecto</div>
-          <div style="display:flex; flex-direction:column; gap:0.4em;">
-            <div class="metric-card" style="display:flex; align-items:center; justify-content:space-between; text-align:left; padding:0.5em 1em;">
-              <span style="font-size:0.72em; color:var(--text-muted);">Archivos fuente C++</span>
-              <span class="metric-val" style="font-size:1.3em;">57</span>
+        <div class="fragment fade-up">
+          <div class="txt-xs c-muted fw7" style="text-transform:uppercase;letter-spacing:.07em;margin-bottom:.4em;">Métricas del Proyecto</div>
+          <div style="display:flex;flex-direction:column;gap:.35em;">
+            <div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:.45em 1em;">
+              <span class="txt-xs c-muted">Archivos fuente C++</span>
+              <span class="txt-sm fw7 c-blue">57</span>
             </div>
-            <div class="metric-card" style="display:flex; align-items:center; justify-content:space-between; text-align:left; padding:0.5em 1em;">
-              <span style="font-size:0.72em; color:var(--text-muted);">Líneas de código efectivo</span>
-              <span class="metric-val" style="font-size:1.3em;">5,333</span>
+            <div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:.45em 1em;">
+              <span class="txt-xs c-muted">Líneas de código efectivo</span>
+              <span class="txt-sm fw7 c-blue">5,333</span>
             </div>
-            <div class="metric-card" style="display:flex; align-items:center; justify-content:space-between; text-align:left; padding:0.5em 1em;">
-              <span style="font-size:0.72em; color:var(--text-muted);">Nodos metropolitanos AQP</span>
-              <span class="metric-val" style="font-size:1.3em; color:var(--amber);">30</span>
+            <div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:.45em 1em;">
+              <span class="txt-xs c-muted">Nodos metropolitanos AQP</span>
+              <span class="txt-sm fw7 c-amber">30</span>
             </div>
-            <div class="metric-card" style="display:flex; align-items:center; justify-content:space-between; text-align:left; padding:0.5em 1em;">
-              <span style="font-size:0.72em; color:var(--text-muted);">Rutas viales OSRM</span>
-              <span class="metric-val" style="font-size:1.3em; color:var(--amber);">870</span>
+            <div class="card" style="display:flex;justify-content:space-between;align-items:center;padding:.45em 1em;">
+              <span class="txt-xs c-muted">Rutas viales OSRM</span>
+              <span class="txt-sm fw7 c-amber">870</span>
             </div>
           </div>
         </div>
       </div>
 
       <aside class="notes">
-        La arquitectura separa claramente Modelo, Vista y Controlador. El Modelo contiene toda la lógica de negocio y las estructuras de datos genéricas. Los Controladores actúan como puentes usando señales y slots de Qt. Las Vistas renderizan el estado sin conocer la lógica interna.
+        Arquitectura MVC estricta. El modelo no sabe nada de la vista. Los controladores usan señales y slots de Qt para propagar cambios.
       </aside>
     </section>
 
-    <!-- ══════════════════════════════════════════════
-         SLIDE 4 — POO AVANZADA
-    ══════════════════════════════════════════════ -->
+    <!-- ══════════════════════
+         04 — POO
+    ══════════════════════════ -->
     <section data-transition="slide">
-      <div class="expositor-badge" style="color:#FCD34D; border-color:rgba(252,211,77,0.35); background:rgba(252,211,77,0.08);">
-        Leonardo Juan Jose Baca Calsin <span class="time">⏱ ~1 min</span>
+      <div class="slide-header">
+        <div class="slide-num" style="background:var(--amber);">04</div>
+        <h2>POO Avanzada — Jerarquías Polimórficas</h2>
       </div>
+      <div class="divider" style="background:linear-gradient(90deg,var(--amber),rgba(217,119,6,0.1));"></div>
 
-      <div class="slide-title-line">
-        <span class="slide-num" style="background:linear-gradient(135deg,#F59E0B,#D97706);">04</span>
-        <h2 style="font-size:1.3em; margin:0;">POO Avanzada — Jerarquías Polimórficas</h2>
-      </div>
-      <div class="accent-line" style="background:linear-gradient(90deg, var(--amber), transparent);"></div>
-
-      <div class="grid-2">
+      <div class="g2">
         <div>
-          <div style="font-size:0.72em; color:var(--text-muted); margin-bottom:0.5em; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Jerarquía de Vehículos</div>
-          <div class="glass" style="padding:1em 1.2em;">
+          <div class="txt-xs c-muted fw7" style="text-transform:uppercase;letter-spacing:.07em;margin-bottom:.4em;">Jerarquía de Vehículos</div>
+          <div class="card" style="padding:.9em 1.1em; margin-bottom:.5em;">
             <div class="tree">
-              <div class="tree-abstract">🚗 Vehiculo  <span style="color:var(--text-muted)">&lt;abstracta&gt;</span></div>
-              <div style="margin-top:0.4em; padding-left:1em;">
-                <div class="tree-line">├── <span class="tree-concrete">🏍️ Moto</span>  <span style="color:var(--text-muted); font-size:0.85em">cap: 15 kg · 60 km/h</span></div>
-                <div class="tree-line">├── <span class="tree-concrete">🚙 Auto</span>  <span style="color:var(--text-muted); font-size:0.85em">cap: 100 kg · 50 km/h</span></div>
-                <div class="tree-line">└── <span class="tree-concrete">🚛 Camion</span> <span style="color:var(--text-muted); font-size:0.85em">cap: 2000 kg · 40 km/h</span></div>
+              <div class="t-abs">🚗 Vehiculo &lt;abstracta&gt;</div>
+              <div style="padding-left:.8em; margin-top:.2em;">
+                <div>├── <span class="t-con">🏍️ Moto</span>  <span class="t-muted">– 15 kg · 60 km/h</span></div>
+                <div>├── <span class="t-con">🚙 Auto</span>  <span class="t-muted">– 100 kg · 50 km/h</span></div>
+                <div>└── <span class="t-con">🚛 Camion</span> <span class="t-muted">– 2000 kg · 40 km/h</span></div>
               </div>
-              <div class="tree-abstract" style="margin-top:0.7em;">📦 Paquete  <span style="color:var(--text-muted)">&lt;abstracta&gt;</span></div>
-              <div style="margin-top:0.4em; padding-left:1em;">
-                <div class="tree-line">├── <span class="tree-concrete">PaqueteEstandar</span></div>
-                <div class="tree-line">└── <span class="tree-concrete">PaqueteFragil</span></div>
+              <div class="t-abs" style="margin-top:.5em;">📦 Paquete &lt;abstracta&gt;</div>
+              <div style="padding-left:.8em; margin-top:.2em;">
+                <div>├── <span class="t-con">PaqueteEstandar</span></div>
+                <div>└── <span class="t-con">PaqueteFragil</span></div>
               </div>
             </div>
           </div>
-
-          <div class="glass fragment fade-up" style="margin-top:0.6em; padding:0.7em 1em;">
-            <div style="font-size:0.65em; color:var(--text-muted);">
-              ✅ <span style="color:var(--green)">Polimorfismo dinámico</span> — cada subclase implementa <span class="mono" style="color:var(--cyan)">calcularCosto()</span>, <span class="mono" style="color:var(--cyan)">getTipo()</span> y <span class="mono" style="color:var(--cyan)">calcularTiempoEntrega()</span><br>
-              ✅ <span style="color:var(--green)">Destructores virtuales</span> — <span class="mono" style="color:var(--cyan)">virtual ~Vehiculo() = default;</span><br>
-              ✅ <span style="color:var(--green)">Especificadores modernos</span> — <span class="mono" style="color:var(--amber)">override</span>, <span class="mono" style="color:var(--amber)">[[nodiscard]]</span>, <span class="mono" style="color:var(--amber)">= delete</span>
+          <div class="card card-amber fragment fade-up" style="padding:.7em 1em;">
+            <div class="txt-xs" style="line-height:1.6;">
+              ✔ <strong>Polimorfismo dinámico</strong> —
+              <span class="mono txt-xxs" style="color:var(--blue);">calcularCosto()</span>,
+              <span class="mono txt-xxs" style="color:var(--blue);">getTipo()</span>,
+              <span class="mono txt-xxs" style="color:var(--blue);">calcularTiempoEntrega()</span><br>
+              ✔ Destructores virtuales — <span class="mono txt-xxs" style="color:var(--blue);">virtual ~Vehiculo() = default</span><br>
+              ✔ Especificadores modernos — <span class="mono txt-xxs" style="color:var(--amber);">override · [[nodiscard]] · = delete</span>
             </div>
           </div>
         </div>
 
         <div class="fragment fade-up">
-          <div style="font-size:0.72em; color:var(--text-muted); margin-bottom:0.5em; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Extracto Real del Código</div>
-          <pre><code class="language-cpp">// Vehiculo.h — Clase abstracta pura
-class Vehiculo {
+          <div class="txt-xs c-muted fw7" style="text-transform:uppercase;letter-spacing:.07em;margin-bottom:.4em;">Código Real — Vehiculo.h</div>
+          <pre><code class="language-cpp">class Vehiculo {
 public:
   Vehiculo(const std::string& id,
            const std::string& placa,
@@ -718,19 +587,18 @@ public:
 
   virtual ~Vehiculo() = default;
 
-  // Funciones virtuales puras (interfaz polimórfica)
+  // Funciones virtuales puras
   virtual double calcularCosto(
-    double distanciaKm, double pesoKg) const = 0;
+    double distKm, double pesoKg) const = 0;
   virtual std::string getTipo() const = 0;
   virtual double calcularTiempoEntrega(
-    double distanciaKm) const = 0;
+    double distKm) const = 0;
 
-  // Función virtual con default
+  // Con implementación por defecto
   virtual bool puedeCargar(double pesoKg) const;
 
-  // Encapsulamiento — getters con const
+  // Encapsulamiento
   [[nodiscard]] double getCapacidadKg() const;
-  [[nodiscard]] EstadoVehiculo getEstado() const;
 
 protected:
   std::string    m_id, m_placa;
@@ -741,32 +609,27 @@ protected:
       </div>
 
       <aside class="notes">
-        La clase Vehiculo es abstracta pura: tres métodos virtuales puros que toda subclase debe implementar. Moto, Auto y Camión tienen tarifas diferentes, capacidades distintas y velocidades propias. El compilador garantiza en tiempo de compilación que nadie puede instanciar Vehiculo directamente.
+        Vehiculo es abstracta pura. Ningún cliente puede instanciarla directamente. Cada subclase define su propio costo y tiempo de entrega.
       </aside>
     </section>
 
-    <!-- ══════════════════════════════════════════════
-         SLIDE 5 — PATRONES GOF I: Factory + Strategy
-    ══════════════════════════════════════════════ -->
+    <!-- ══════════════════════
+         05 — FACTORY + STRATEGY
+    ══════════════════════════ -->
     <section data-transition="slide">
-      <div class="expositor-badge" style="color:#FCD34D; border-color:rgba(252,211,77,0.35); background:rgba(252,211,77,0.08);">
-        Leonardo Juan Jose Baca Calsin <span class="time">⏱ ~1.5 min</span>
+      <div class="slide-header">
+        <div class="slide-num" style="background:var(--amber);">05</div>
+        <h2>Patrones GoF I — Factory Method &amp; Strategy</h2>
       </div>
+      <div class="divider" style="background:linear-gradient(90deg,var(--amber),rgba(217,119,6,0.1));"></div>
 
-      <div class="slide-title-line">
-        <span class="slide-num" style="background:linear-gradient(135deg,#F59E0B,#D97706);">05</span>
-        <h2 style="font-size:1.3em; margin:0;">Patrones GoF I — Factory Method &amp; Strategy</h2>
-      </div>
-      <div class="accent-line" style="background:linear-gradient(90deg, var(--amber), transparent);"></div>
-
-      <div class="grid-2">
+      <div class="g2">
         <div>
-          <div class="pattern-box fragment fade-up" style="background:rgba(245,158,11,0.08); border-color:rgba(245,158,11,0.3);">
-            <div class="pname" style="color:var(--amber);">🏭 1. Factory Method (Creacional)</div>
-            <div class="pdesc">Desacopla la <strong>creación</strong> de vehículos de su uso. El cliente no llama a <code>new Moto()</code> directamente.</div>
+          <div class="pat" style="border-color:var(--amber);">
+            <div class="pn" style="color:var(--amber);">🏭 Factory Method (Creacional)</div>
+            <div class="pd">Desacopla la <strong>creación</strong> de vehículos de su uso. Ningún componente llama a <span class="mono">new Moto()</span> directamente.</div>
           </div>
-          <pre class="fragment fade-up" style="font-size:0.65em; margin-top:0.5em;"><code class="language-cpp">// FactoriaVehiculos.h
-class VehiculoFactory {
+          <pre class="fragment fade-up" style="font-size:0.65em;"><code class="language-cpp">class VehiculoFactory {
 public:
   virtual ~VehiculoFactory() = default;
   virtual std::unique_ptr&lt;Vehiculo&gt;
@@ -786,60 +649,49 @@ public:
         </div>
 
         <div>
-          <div class="pattern-box fragment fade-up" style="background:rgba(34,197,94,0.08); border-color:rgba(34,197,94,0.3);">
-            <div class="pname" style="color:var(--green);">💱 2. Strategy (Comportamiento)</div>
-            <div class="pdesc">Permite cambiar el algoritmo de <strong>cálculo de tarifas</strong> en tiempo de ejecución según el tipo de paquete.</div>
+          <div class="pat" style="border-color:var(--green);">
+            <div class="pn" style="color:var(--green);">💱 Strategy (Comportamiento)</div>
+            <div class="pd">Calcula la tarifa en tiempo real según el tipo de paquete. Se muestra automáticamente en el formulario de registro.</div>
           </div>
-          <pre class="fragment fade-up" style="font-size:0.65em; margin-top:0.5em;"><code class="language-cpp">// EstrategiaTarifa.h
-class IEstrategiaTarifa {
+          <pre class="fragment fade-up" style="font-size:0.65em;"><code class="language-cpp">class IEstrategiaTarifa {
 public:
   virtual ~IEstrategiaTarifa() = default;
   virtual double calcular(
     double distKm, double pesoKg) const = 0;
 };
 
-// TarifaFragilStrategy — precio premium
-class TarifaFragilStrategy : public IEstrategiaTarifa {
+// Frágil: 40% de recargo por manejo especial
+class TarifaFragilStrategy
+    : public IEstrategiaTarifa {
 public:
   double calcular(double distKm,
                   double pesoKg) const override {
-    // Tarifa base + 40% por manejo especial
     return (distKm * 2.5 + pesoKg * 0.8) * 1.4;
   }
-};</code></pre>
-
-          <div class="glass fragment fade-up" style="padding:0.5em 0.8em; margin-top:0.5em;">
-            <div style="font-size:0.65em; color:var(--text-muted);">
-              💡 Resultado: La tarifa se calcula <span style="color:var(--cyan)">automáticamente</span> según tipo de paquete y se muestra en tiempo real en el formulario de registro.
-            </div>
-          </div>
+};
+// También: TarifaEstandarStrategy, TarifaPesadaStrategy</code></pre>
         </div>
       </div>
 
       <aside class="notes">
-        Factory Method permite que el sistema cree vehículos sin saber qué tipo concreto crear. El registro de fábricas actúa como un mapa de constructores por tipo de vehículo. Strategy permite que la tarifa cambie dinámicamente: un paquete frágil paga 40% más que uno estándar, y eso se ve reflejado en tiempo real en la interfaz.
+        Factory Method desacopla la construcción de objetos de su uso. Strategy permite cambiar el algoritmo de tarifas dinámicamente según el tipo de paquete seleccionado.
       </aside>
     </section>
 
-    <!-- ══════════════════════════════════════════════
-         SLIDE 6 — PROGRAMACIÓN GENÉRICA
-    ══════════════════════════════════════════════ -->
+    <!-- ══════════════════════
+         06 — TEMPLATES
+    ══════════════════════════ -->
     <section data-transition="slide">
-      <div class="expositor-badge" style="color:#86EFAC; border-color:rgba(34,197,94,0.35); background:rgba(34,197,94,0.08);">
-        Giovanni Patrick Mejia Rondan <span class="time">⏱ ~1.5 min</span>
+      <div class="slide-header">
+        <div class="slide-num" style="background:var(--green);">06</div>
+        <h2>Programación Genérica — Templates Propios &amp; RAII</h2>
       </div>
+      <div class="divider" style="background:linear-gradient(90deg,var(--green),rgba(22,163,74,0.1));"></div>
 
-      <div class="slide-title-line">
-        <span class="slide-num" style="background:linear-gradient(135deg,#22C55E,#16A34A);">06</span>
-        <h2 style="font-size:1.3em; margin:0;">Programación Genérica — Templates Propios &amp; RAII</h2>
-      </div>
-      <div class="accent-line" style="background:linear-gradient(90deg, var(--green), transparent);"></div>
-
-      <div class="grid-2">
+      <div class="g2">
         <div>
-          <div style="font-size:0.72em; color:var(--text-muted); margin-bottom:0.4em; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Cola&lt;T&gt; — FIFO Thread-Safe Genérica</div>
-          <pre><code class="language-cpp">// Cola.h — Template propio
-template &lt;typename T&gt;
+          <div class="txt-xs c-muted fw7" style="text-transform:uppercase;letter-spacing:.07em;margin-bottom:.4em;">Cola&lt;T&gt; — FIFO Thread-Safe Propia</div>
+          <pre><code class="language-cpp">template &lt;typename T&gt;
 class Cola {
 public:
   void push(T valor) {
@@ -855,7 +707,7 @@ public:
     return val;
   }
 
-  // Extracción condicional con lambda predicado
+  // Extrae el primer elemento que cumpla el predicado
   template &lt;typename Predicate&gt;
   [[nodiscard]] std::optional&lt;T&gt;
     extraerSi(Predicate pred);
@@ -867,97 +719,88 @@ private:
         </div>
 
         <div>
-          <div style="font-size:0.72em; color:var(--text-muted); margin-bottom:0.4em; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Gestión de Memoria RAII</div>
-          <div class="glass fragment fade-up" style="padding:0.8em 1em; margin-bottom:0.6em;">
-            <div style="font-size:0.68em; display:grid; grid-template-columns:auto 1fr; gap:0.3em 0.6em; align-items:center;">
-              <span style="color:var(--cyan); font-family:monospace;">unique_ptr&lt;T&gt;</span>
-              <span style="color:var(--text-muted);">Propietario exclusivo — factorías de vehículos</span>
-              <span style="color:var(--green); font-family:monospace;">shared_ptr&lt;T&gt;</span>
-              <span style="color:var(--text-muted);">Propiedad compartida — pedidos en flota activa</span>
-              <span style="color:var(--amber); font-family:monospace;">weak_ptr&lt;T&gt;</span>
-              <span style="color:var(--text-muted);">Referencia débil — lista de observadores (evita ciclos)</span>
+          <div class="txt-xs c-muted fw7" style="text-transform:uppercase;letter-spacing:.07em;margin-bottom:.4em;">Gestión de Memoria RAII</div>
+          <div class="card" style="padding:.8em 1em; margin-bottom:.6em;">
+            <div class="txt-xs" style="display:grid;grid-template-columns:auto 1fr;gap:.25em .6em;align-items:center;line-height:1.6;">
+              <span class="mono c-blue">unique_ptr&lt;T&gt;</span>
+              <span class="c-muted">Propietario exclusivo — factorías de vehículos</span>
+              <span class="mono c-green">shared_ptr&lt;T&gt;</span>
+              <span class="c-muted">Propiedad compartida — pedidos en flota activa</span>
+              <span class="mono c-amber">weak_ptr&lt;T&gt;</span>
+              <span class="c-muted">Referencia débil — lista de observers (evita ciclos)</span>
             </div>
           </div>
 
-          <div style="font-size:0.72em; color:var(--text-muted); margin-bottom:0.4em; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Templates Adicionales</div>
-          <div class="grid-2 fragment fade-up" style="gap:0.5em;">
-            <div class="glass-cyan" style="padding:0.6em 0.8em;">
-              <div style="font-size:0.72em; font-weight:700; color:var(--cyan); font-family:monospace;">Repositorio&lt;T, Key&gt;</div>
-              <div style="font-size:0.6em; color:var(--text-muted); margin-top:4px;">Almacén asociativo genérico con búsqueda por lambda predicado</div>
+          <div class="txt-xs c-muted fw7" style="text-transform:uppercase;letter-spacing:.07em;margin-bottom:.4em;">Otros Templates</div>
+          <div class="g2 fragment fade-up" style="gap:.5em;">
+            <div class="card card-blue" style="padding:.6em .8em;">
+              <div class="txt-sm fw7 c-blue mono">Repositorio&lt;T,Key&gt;</div>
+              <div class="txt-xxs c-muted mt4">Almacén asociativo genérico con búsqueda por lambda predicado</div>
             </div>
-            <div class="glass-cyan" style="padding:0.6em 0.8em;">
-              <div style="font-size:0.72em; font-weight:700; color:var(--cyan); font-family:monospace;">Ruta&lt;CoordType&gt;</div>
-              <div style="font-size:0.6em; color:var(--text-muted); margin-top:4px;">Cálculo geométrico parametrizado en <span class="mono">float</span> o <span class="mono">double</span></div>
+            <div class="card card-blue" style="padding:.6em .8em;">
+              <div class="txt-sm fw7 c-blue mono">Ruta&lt;CoordType&gt;</div>
+              <div class="txt-xxs c-muted mt4">Cálculo geométrico parametrizado en <span class="mono">float</span> o <span class="mono">double</span></div>
             </div>
           </div>
 
-          <div class="glass fragment fade-up" style="margin-top:0.5em; padding:0.6em 1em; background:rgba(34,197,94,0.06);">
-            <div style="font-size:0.65em; color:var(--green); font-weight:600;">✅ 0% punteros crudos con new/delete en la lógica de negocio</div>
+          <div class="card card-green fragment fade-up" style="margin-top:.5em;padding:.5em .8em;text-align:center;">
+            <div class="txt-xs fw7 c-green">✅ 0% punteros crudos con new/delete en la lógica de negocio</div>
           </div>
         </div>
       </div>
 
       <aside class="notes">
-        Cola T es nuestra estructura de datos central: protege el acceso con lock_guard en cada operación individual. El método extraerSi permite que un repartidor de Moto saque solo los pedidos compatibles con su capacidad, dejando el resto intacto. Repositorio T es nuestro almacén tipo mapa genérico con búsqueda funcional mediante lambdas. Todo el proyecto usa smart pointers —cero new y delete manuales en la lógica de negocio.
+        Cola T es nuestra estructura de datos central. extraerSi permite a una Moto extraer solo pedidos de menos de 15 kg sin afectar el orden de los demás. Zero new/delete manuales en toda la lógica de negocio.
       </aside>
     </section>
 
-    <!-- ══════════════════════════════════════════════
-         SLIDE 7 — PATRONES GOF II: Singleton + Observer
-    ══════════════════════════════════════════════ -->
+    <!-- ══════════════════════
+         07 — SINGLETON + OBSERVER
+    ══════════════════════════ -->
     <section data-transition="slide">
-      <div class="expositor-badge" style="color:#86EFAC; border-color:rgba(34,197,94,0.35); background:rgba(34,197,94,0.08);">
-        Giovanni Patrick Mejia Rondan <span class="time">⏱ ~1.5 min</span>
+      <div class="slide-header">
+        <div class="slide-num" style="background:var(--green);">07</div>
+        <h2>Patrones GoF II — Singleton &amp; Observer</h2>
       </div>
+      <div class="divider" style="background:linear-gradient(90deg,var(--green),rgba(22,163,74,0.1));"></div>
 
-      <div class="slide-title-line">
-        <span class="slide-num" style="background:linear-gradient(135deg,#22C55E,#16A34A);">07</span>
-        <h2 style="font-size:1.3em; margin:0;">Patrones GoF II — Singleton &amp; Observer</h2>
-      </div>
-      <div class="accent-line" style="background:linear-gradient(90deg, var(--green), transparent);"></div>
-
-      <div class="grid-2">
+      <div class="g2">
         <div>
-          <div class="pattern-box fragment fade-up">
-            <div class="pname">🔒 3. Singleton — Scott Meyers C++17 Thread-Safe</div>
-            <div class="pdesc"><code>ServicioRutas</code>: punto de acceso global único al motor de ruteo vial de Arequipa. Inicializado una sola vez con las 870 rutas OSRM.</div>
+          <div class="pat fragment fade-up">
+            <div class="pn">🔒 Singleton — Meyer's C++17 Thread-Safe</div>
+            <div class="pd"><span class="mono">ServicioRutas</span>: punto de acceso único al motor de ruteo vial. Carga las 870 rutas OSRM una sola vez, en memoria compartida, de forma thread-safe.</div>
           </div>
-          <pre class="fragment fade-up" style="font-size:0.68em; margin-top:0.5em;"><code class="language-cpp">// ServicioRutas.h — Singleton (Meyer's)
-class ServicioRutas {
+          <pre class="fragment fade-up" style="font-size:0.65em; margin-top:.5em;"><code class="language-cpp">class ServicioRutas {
 public:
-  // Instancia única global — thread-safe en C++17
+  // Thread-safe por garantía del estándar C++17
   static ServicioRutas& instancia() {
-    static ServicioRutas instancia_;  // init segura
-    return instancia_;
+    static ServicioRutas inst;  // init exactamente 1 vez
+    return inst;
   }
-
   RutaUrbana obtenerRuta(
     const QString& origen,
     const QString& destino) const;
 
-  // No copiable ni movible (garantía Singleton)
+  // Garantía Singleton: no copiable ni movible
   ServicioRutas(const ServicioRutas&) = delete;
   ServicioRutas& operator=(const ServicioRutas&) = delete;
-
 private:
-  ServicioRutas() = default;  // ctor privado
+  ServicioRutas() = default;
   QMap&lt;QString, RutaUrbana&gt; m_cache;
 };</code></pre>
         </div>
 
         <div>
-          <div class="pattern-box fragment fade-up">
-            <div class="pname">📡 4. Observer (Publisher-Subscriber)</div>
-            <div class="pdesc">El Modelo notifica a las Vistas sin conocerlas. Usa <code>weak_ptr</code> para evitar ciclos de referencia y purga automática de observadores expirados.</div>
+          <div class="pat fragment fade-up">
+            <div class="pn">📡 Observer (Publisher-Subscriber)</div>
+            <div class="pd">El Modelo notifica a las Vistas sin conocerlas. Usa <span class="mono">weak_ptr</span> para evitar ciclos de referencia y purga automática de observers expirados.</div>
           </div>
-          <pre class="fragment fade-up" style="font-size:0.68em; margin-top:0.5em;"><code class="language-cpp">// Observer.h — Eventos del sistema
-enum class EventoSiger {
-  PEDIDO_NUEVO, PEDIDO_ASIGNADO,
-  PEDIDO_EN_CAMINO, PEDIDO_COMPLETADO,
-  SIMULACION_INICIADA, TODOS_COMPLETADOS
+          <pre class="fragment fade-up" style="font-size:0.65em; margin-top:.5em;"><code class="language-cpp">enum class EventoSiger {
+  PEDIDO_NUEVO,     PEDIDO_EN_CAMINO,
+  PEDIDO_COMPLETADO,SIMULACION_INICIADA,
+  TODOS_COMPLETADOS
 };
 
-// IObserver — interfaz pura
 class IObserver {
 public:
   virtual void onEvento(
@@ -965,85 +808,72 @@ public:
   virtual ~IObserver() = default;
 };
 
-// ISubject — gestiona suscriptores con weak_ptr
-// La notificación ocurre FUERA del mutex
-// para prevenir deadlocks en cadena.</code></pre>
+// ISubject: notifica FUERA del mutex
+// para prevenir deadlocks en cadena
+// Lista interna: vector&lt;weak_ptr&lt;IObserver&gt;&gt;</code></pre>
 
-          <div class="glass fragment fade-up" style="padding:0.5em 0.8em; margin-top:0.4em;">
-            <div style="font-size:0.63em; color:var(--text-muted);">
-              💡 La notificación <strong>fuera del lock</strong> previene que un observador que llame a <span class="mono c-cyan">suscribir()</span> durante su callback cause un deadlock anidado.
-            </div>
+          <div class="card card-blue fragment fade-up" style="margin-top:.4em; padding:.5em .8em;">
+            <div class="txt-xs c-muted">La notificación <strong style="color:var(--blue)">fuera del lock</strong> previene deadlocks si un observer llama a <span class="mono">suscribir()</span> durante su callback.</div>
           </div>
         </div>
       </div>
 
       <aside class="notes">
-        El Singleton de ServicioRutas aprovecha la garantía de C++17 de que las variables estáticas locales se inicializan exactamente una vez, de forma thread-safe. El Observer usa weak_ptr para que si una vista se destruye, el sistema no rompa: simplemente purga el puntero expirado en la siguiente notificación.
+        El Singleton de ServicioRutas aprovecha la garantía C++17 de inicialización única de estáticas locales. El Observer usa weak_ptr para que si una vista se destruye, el sistema no rompa.
       </aside>
     </section>
 
-    <!-- ══════════════════════════════════════════════
-         SLIDE 8 — CONCURRENCIA (Modelo P/C)
-    ══════════════════════════════════════════════ -->
+    <!-- ══════════════════════
+         08 — CONCURRENCIA
+    ══════════════════════════ -->
     <section data-transition="slide">
-      <div class="expositor-badge" style="color:#D8B4FE; border-color:rgba(168,85,247,0.35); background:rgba(168,85,247,0.08);">
-        Renato Xavier Ponce Llerena <span class="time">⏱ ~1.5 min</span>
+      <div class="slide-header">
+        <div class="slide-num" style="background:var(--purple);">08</div>
+        <h2>Concurrencia — Modelo Productor / Consumidor</h2>
       </div>
+      <div class="divider" style="background:linear-gradient(90deg,var(--purple),rgba(124,58,237,0.1));"></div>
 
-      <div class="slide-title-line">
-        <span class="slide-num" style="background:linear-gradient(135deg,#A855F7,#7C3AED);">08</span>
-        <h2 style="font-size:1.3em; margin:0;">Concurrencia — Modelo Productor / Consumidor</h2>
-      </div>
-      <div class="accent-line" style="background:linear-gradient(90deg, var(--purple), transparent);"></div>
-
-      <!-- P/C Diagram -->
-      <div class="glass fragment fade-up" style="margin-bottom: 0.8em; padding: 0.8em 1.2em;">
-        <div style="display:grid; grid-template-columns: 1fr auto 1fr auto 1fr; align-items:center; gap:0.6em; text-align:center;">
-          <div class="conc-box conc-producer">
+      <!-- Diagrama P/C -->
+      <div class="card fragment fade-up" style="margin-bottom:.8em; padding:.8em 1.2em;">
+        <div class="pc-row">
+          <div class="pc-box pc-prod">
             📋 PRODUCTOR<br>
-            <span style="font-size:0.8em; font-weight:400;">FormPedido / LoteDemo</span><br>
-            <span style="font-size:0.75em; color:var(--text-muted);">push(pedido) → Cola&lt;T&gt;</span>
+            <span style="font-weight:400;font-size:.85em;">FormPedido / LoteDemo</span><br>
+            <span class="mono" style="font-size:.8em;color:var(--gray3);">push(pedido) → Cola&lt;T&gt;</span>
           </div>
-          <div class="conc-arrow">→</div>
-          <div class="conc-box conc-queue">
+          <div class="pc-arr">→</div>
+          <div class="pc-box pc-queue">
             🔒 Cola&lt;shared_ptr&lt;Pedido&gt;&gt;<br>
-            <span style="font-size:0.8em; font-weight:400;">Thread-Safe</span><br>
-            <span style="font-size:0.75em; color:var(--text-muted);">mutex + condition_variable</span>
+            <span style="font-weight:400;font-size:.85em;">Thread-Safe</span><br>
+            <span class="mono" style="font-size:.8em;color:var(--gray3);">mutex + condition_variable</span>
           </div>
-          <div class="conc-arrow">→</div>
-          <div class="conc-box conc-consumer">
+          <div class="pc-arr">→</div>
+          <div class="pc-box pc-cons">
             🚚 CONSUMIDORES<br>
-            <span style="font-size:0.8em; font-weight:400;">Repartidor × N hilos</span><br>
-            <span style="font-size:0.75em; color:var(--text-muted);">extraerSi(predicado tipo)</span>
+            <span style="font-weight:400;font-size:.85em;">Repartidor × N hilos</span><br>
+            <span class="mono" style="font-size:.8em;color:var(--gray3);">extraerSi(predicado tipo)</span>
           </div>
         </div>
       </div>
 
-      <div class="grid-2">
+      <div class="g2">
         <div class="fragment fade-up">
-          <pre style="font-size:0.65em;"><code class="language-cpp">// SimuladorEntregas.cpp — hilo por repartidor
-void SimuladorEntregas::hiloRepartidor(
-    std::shared_ptr&lt;Repartidor&gt; repartidor) {
-
+          <pre style="font-size:0.64em;"><code class="language-cpp">void SimuladorEntregas::hiloRepartidor(
+    std::shared_ptr&lt;Repartidor&gt; rep) {
   while (m_corriendo) {
     std::unique_lock&lt;std::mutex&gt; lock(m_mutex);
-
-    // Esperar hasta que haya pedidos O señal de parada
+    // Duerme hasta que llegue un pedido
     m_condVar.wait(lock, [&] {
       return !m_cola-&gt;isEmpty() || !m_corriendo;
     });
-
     if (!m_corriendo) break;
-
-    // Extraer pedido compatible con este vehículo
+    // Solo extrae pedidos compatibles
     auto pedido = m_cola-&gt;extraerSi([&](auto& p) {
-      return repartidor-&gt;puedeAtender(*p);
+      return rep-&gt;puedeAtender(*p);
     });
-
     lock.unlock();  // liberar antes de entregar
-
     if (pedido) {
-      simularEntrega(repartidor, *pedido);
+      simularEntrega(rep, *pedido);
       // Round-Robin: ceder turno a otros hilos
       std::this_thread::sleep_for(50ms);
     }
@@ -1052,34 +882,34 @@ void SimuladorEntregas::hiloRepartidor(
         </div>
 
         <div class="fragment fade-up">
-          <div style="font-size:0.72em; color:var(--text-muted); margin-bottom:0.5em; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Primitivas de Sincronización</div>
-          <div style="display:flex; flex-direction:column; gap:0.4em;">
-            <div class="glass" style="padding:0.6em 0.9em; display:flex; align-items:center; gap:0.7em;">
-              <span style="font-size:1.3em;">🔒</span>
+          <div class="txt-xs c-muted fw7" style="text-transform:uppercase;letter-spacing:.07em;margin-bottom:.4em;">Primitivas de Sincronización</div>
+          <div style="display:flex;flex-direction:column;gap:.35em;">
+            <div class="card" style="display:flex;align-items:center;gap:.7em;padding:.5em .9em;">
+              <span style="font-size:1.2em;">🔒</span>
               <div>
-                <div class="mono" style="font-size:0.72em; color:var(--cyan);">std::mutex + lock_guard</div>
-                <div style="font-size:0.6em; color:var(--text-muted);">Protege la Cola compartida y estadísticas atómicas</div>
+                <div class="mono txt-xs c-blue">std::mutex + lock_guard</div>
+                <div class="txt-xxs c-muted">Protege la Cola compartida</div>
               </div>
             </div>
-            <div class="glass" style="padding:0.6em 0.9em; display:flex; align-items:center; gap:0.7em;">
-              <span style="font-size:1.3em;">📢</span>
+            <div class="card" style="display:flex;align-items:center;gap:.7em;padding:.5em .9em;">
+              <span style="font-size:1.2em;">📢</span>
               <div>
-                <div class="mono" style="font-size:0.72em; color:var(--cyan);">condition_variable + notify_all</div>
-                <div style="font-size:0.6em; color:var(--text-muted);">Despierta a todos los conductores cuando llega un pedido nuevo</div>
+                <div class="mono txt-xs c-blue">condition_variable + notify_all</div>
+                <div class="txt-xxs c-muted">Despierta todos los conductores ante un pedido nuevo</div>
               </div>
             </div>
-            <div class="glass" style="padding:0.6em 0.9em; display:flex; align-items:center; gap:0.7em;">
-              <span style="font-size:1.3em;">⚛️</span>
+            <div class="card" style="display:flex;align-items:center;gap:.7em;padding:.5em .9em;">
+              <span style="font-size:1.2em;">⚛️</span>
               <div>
-                <div class="mono" style="font-size:0.72em; color:var(--cyan);">std::atomic&lt;int&gt;</div>
-                <div style="font-size:0.6em; color:var(--text-muted);">Contadores de entregados/en-ruta sin lock adicional</div>
+                <div class="mono txt-xs c-blue">std::atomic&lt;int&gt;</div>
+                <div class="txt-xxs c-muted">Contadores de entregados/en-ruta sin lock adicional</div>
               </div>
             </div>
-            <div class="glass" style="padding:0.6em 0.9em; display:flex; align-items:center; gap:0.7em;">
-              <span style="font-size:1.3em;">🔗</span>
+            <div class="card" style="display:flex;align-items:center;gap:.7em;padding:.5em .9em;">
+              <span style="font-size:1.2em;">🔗</span>
               <div>
-                <div class="mono" style="font-size:0.72em; color:var(--cyan);">thread::join() fuera del lock</div>
-                <div style="font-size:0.6em; color:var(--text-muted);">Parada limpia — garantía de deadlock-free</div>
+                <div class="mono txt-xs c-blue">thread::join() fuera del lock</div>
+                <div class="txt-xxs c-muted">Parada limpia — garantía deadlock-free</div>
               </div>
             </div>
           </div>
@@ -1087,168 +917,143 @@ void SimuladorEntregas::hiloRepartidor(
       </div>
 
       <aside class="notes">
-        Cada repartidor corre en su propio hilo. Cuando llega un nuevo pedido, el productor hace push en la Cola y llama notify_all para despertar a todos los consumidores. Cada repartidor revisa si puede atender ese pedido según su tipo de vehículo usando el predicado de extraerSi. El sleep de 50ms es el Round-Robin voluntario que evita que un solo hilo monopolice todos los pedidos.
+        Cada repartidor corre en su propio hilo. notify_all despierta a todos los consumidores. El predicado de extraerSi garantiza que cada repartidor solo tome pedidos compatibles con su vehículo.
       </aside>
     </section>
 
-    <!-- ══════════════════════════════════════════════
-         SLIDE 9 — BALANCEO + PREVENCIÓN DEADLOCKS
-    ══════════════════════════════════════════════ -->
+    <!-- ══════════════════════
+         09 — BALANCEO + DEADLOCKS
+    ══════════════════════════ -->
     <section data-transition="slide">
-      <div class="expositor-badge" style="color:#D8B4FE; border-color:rgba(168,85,247,0.35); background:rgba(168,85,247,0.08);">
-        Renato Xavier Ponce Llerena <span class="time">⏱ ~1 min</span>
+      <div class="slide-header">
+        <div class="slide-num" style="background:var(--purple);">09</div>
+        <h2>Balanceo de Carga &amp; Prevención de Deadlocks</h2>
       </div>
+      <div class="divider" style="background:linear-gradient(90deg,var(--purple),rgba(124,58,237,0.1));"></div>
 
-      <div class="slide-title-line">
-        <span class="slide-num" style="background:linear-gradient(135deg,#A855F7,#7C3AED);">09</span>
-        <h2 style="font-size:1.3em; margin:0;">Balanceo de Carga &amp; Prevención de Deadlocks</h2>
-      </div>
-      <div class="accent-line" style="background:linear-gradient(90deg, var(--purple), transparent);"></div>
-
-      <div class="grid-2">
+      <div class="g2">
         <div>
-          <div class="glass-cyan fragment fade-up" style="margin-bottom:0.7em;">
-            <div style="font-size:0.8em; font-weight:700; color:var(--cyan);">🔄 Round-Robin Cooperativo (Balanceo de Carga)</div>
-            <div style="font-size:0.68em; color:var(--text-muted); margin-top:0.4em; line-height:1.5em;">
-              Al completar una entrega, el hilo cede el turno 50ms:<br>
-              <span class="mono" style="color:var(--cyan);">std::this_thread::sleep_for(50ms);</span><br><br>
-              Esto permite que el <strong style="color:var(--text-main)">otro conductor del mismo tipo</strong> tome el siguiente pedido, distribuyendo la carga de forma equitativa sin un scheduler centralizado costoso.
+          <div class="card card-blue fragment fade-up" style="margin-bottom:.7em;">
+            <div class="txt-sm fw7 c-blue">🔄 Round-Robin Cooperativo</div>
+            <div class="txt-xs c-muted mt4" style="line-height:1.6;">
+              Al terminar una entrega, el hilo cede el turno 50 ms:<br>
+              <span class="mono" style="color:var(--blue);">std::this_thread::sleep_for(50ms);</span><br><br>
+              Esto permite que el <strong style="color:var(--gray1);">otro conductor del mismo tipo</strong> tome el siguiente pedido, distribuyendo la carga de forma equitativa sin un scheduler centralizado.
             </div>
           </div>
 
-          <div class="glass fragment fade-up" style="background:rgba(239,68,68,0.06); border-color:rgba(239,68,68,0.3);">
-            <div style="font-size:0.8em; font-weight:700; color:var(--red-unsa);">🚫 Prevención de Deadlocks</div>
-            <ul style="font-size:0.65em; color:var(--text-muted); margin:0.4em 0 0; padding-left:1.2em; line-height:1.6em;">
-              <li><strong style="color:var(--text-main)">Regla 1:</strong> Siempre se libera el lock antes de llamar a <span class="mono c-cyan">simularEntrega()</span>.</li>
-              <li><strong style="color:var(--text-main)">Regla 2:</strong> Los observadores se notifican <strong>fuera</strong> del mutex de la lista de observers.</li>
-              <li><strong style="color:var(--text-main)">Regla 3:</strong> <span class="mono c-cyan">thread::join()</span> se llama fuera del lock de simulación.</li>
-              <li><strong style="color:var(--text-main)">Regla 4:</strong> Despacho escalonado (700ms) evita accesos simultáneos al mismo tramo de ruta.</li>
+          <div class="card card-red fragment fade-up">
+            <div class="txt-sm fw7 c-red">🚫 Reglas Anti-Deadlock</div>
+            <ul class="txt-xs c-muted mt4" style="padding-left:1.1em;line-height:1.65em;margin:0;">
+              <li>Liberar el lock <strong style="color:var(--gray1)">antes</strong> de llamar a <span class="mono">simularEntrega()</span>.</li>
+              <li>Notificar observers <strong style="color:var(--gray1)">fuera</strong> del mutex de la lista.</li>
+              <li><span class="mono">thread::join()</span> fuera del lock de simulación.</li>
+              <li>Despacho escalonado (700 ms) entre vehículos.</li>
             </ul>
           </div>
         </div>
 
         <div class="fragment fade-up">
-          <div style="font-size:0.72em; color:var(--text-muted); margin-bottom:0.5em; font-weight:600; text-transform:uppercase; letter-spacing:0.06em;">Vista de Flota en Tiempo Real</div>
-          <div class="app-window" onclick="openLightbox('../../img/Captura de pantalla 2026-11-16 164211.png')">
-            <div class="app-window-bar">
-              <div class="wdot red"></div><div class="wdot amber"></div><div class="wdot green"></div>
-              <span class="wbar-title">SIGER.exe — Monitoreo de Flota (5 repartidores en paralelo)</span>
+          <div class="txt-xs c-muted fw7" style="text-transform:uppercase;letter-spacing:.07em;margin-bottom:.4em;">Flota en Tiempo Real</div>
+          <div class="win" onclick="openLb('../../img/Captura de pantalla 2026-11-16 164211.png')">
+            <div class="win-bar">
+              <div class="dot r"></div><div class="dot a"></div><div class="dot g"></div>
+              <span class="win-title">SIGER — Monitoreo de Flota (5 repartidores)</span>
             </div>
-            <img src="../../img/Captura de pantalla 2026-11-16 164211.png" alt="SIGER Flota" />
+            <img src="../../img/Captura de pantalla 2026-11-16 164211.png" alt="Flota SIGER" />
           </div>
-          <p style="font-size:0.58em; color:var(--text-muted); text-align:center; margin-top:4px;">🔍 Click para ampliar — 2 Motos + 2 Autos + 1 Camión en paralelo</p>
-
-          <div class="glass fragment fade-up" style="margin-top:0.6em; padding:0.5em 0.8em; text-align:center;">
-            <div style="font-size:0.65em;">
-              <span class="c-green fw-bold">✅ Verificado con test_threading:</span>
-              <span class="c-muted"> Distribución equitativa de 9 pedidos entre 5 conductores</span>
-            </div>
-          </div>
+          <p class="txt-xxs c-muted" style="text-align:center;margin-top:4px;">Click para ampliar — 2 Motos + 2 Autos + 1 Camión en paralelo</p>
         </div>
       </div>
 
       <aside class="notes">
-        La vista de Flota muestra en tiempo real qué pedido está atendiendo cada repartidor, con su barra de progreso individual. Nótese que tenemos 2 Motos, 2 Autos y 1 Camión corriendo en hilos independientes y atendiendo pedidos de forma simultánea. Las reglas de prevención de deadlocks se diseñaron con cuidado para evitar bloqueos anidados entre el mutex de la Cola, el mutex de observers y los joins de hilos.
+        La vista de flota muestra en tiempo real qué pedido atiende cada repartidor. El Round-Robin cooperativo garantiza distribución equitativa sin un scheduler adicional.
       </aside>
     </section>
 
-    <!-- ══════════════════════════════════════════════
-         SLIDE 10 — LIVE DEMO / COCKPIT
-    ══════════════════════════════════════════════ -->
-    <section data-transition="zoom">
-      <div class="expositor-badge">German Arturo Chipana Jeronimo <span class="time">⏱ ~2 min</span></div>
-
-      <div class="slide-title-line">
-        <span class="slide-num">10</span>
-        <h2 style="font-size:1.3em; margin:0;">🎮 Live Demo — Cockpit Dashboard</h2>
-      </div>
-      <div class="accent-line"></div>
-
-      <div class="grid-2" style="gap:1em;">
-        <div>
-          <div class="app-window fragment fade-up" onclick="openLightbox('../../img/Captura de pantalla 2026-11-16 164029.png')">
-            <div class="app-window-bar">
-              <div class="wdot red"></div><div class="wdot amber"></div><div class="wdot green"></div>
-              <span class="wbar-title">SIGER — Simulación EN EJECUCIÓN (5 repartidores activos)</span>
-            </div>
-            <img src="../../img/Captura de pantalla 2026-11-16 164029.png" alt="SIGER Simulación activa" />
-          </div>
-          <p style="font-size:0.58em; color:var(--text-muted); text-align:center; margin-top:4px;">🔍 Click para ampliar</p>
-        </div>
-
-        <div>
-          <div class="app-window fragment fade-up" onclick="openLightbox('../../img/Captura de pantalla 2026-11-16 164248.png')">
-            <div class="app-window-bar">
-              <div class="wdot red"></div><div class="wdot amber"></div><div class="wdot green"></div>
-              <span class="wbar-title">SIGER — Estadísticas y KPIs en tiempo real</span>
-            </div>
-            <img src="../../img/Captura de pantalla 2026-11-16 164248.png" alt="SIGER Estadísticas" />
-          </div>
-          <p style="font-size:0.58em; color:var(--text-muted); text-align:center; margin-top:4px;">🔍 Click para ampliar</p>
-        </div>
-      </div>
-
-      <div class="glass fragment fade-up" style="margin-top:0.7em; padding:0.7em 1.2em;">
-        <div style="display:flex; flex-wrap:wrap; gap:0.6em; justify-content:center;">
-          <div style="font-size:0.68em; background:rgba(6,182,212,0.1); border:1px solid rgba(6,182,212,0.3); border-radius:20px; padding:4px 14px;">
-            🎲 <span class="c-cyan fw-bold">Lote Demo</span> — 10 pedidos en 1 clic
-          </div>
-          <div style="font-size:0.68em; background:rgba(6,182,212,0.1); border:1px solid rgba(6,182,212,0.3); border-radius:20px; padding:4px 14px;">
-            🌙 <span class="c-cyan fw-bold">Ctrl+D</span> — Modo Oscuro
-          </div>
-          <div style="font-size:0.68em; background:rgba(6,182,212,0.1); border:1px solid rgba(6,182,212,0.3); border-radius:20px; padding:4px 14px;">
-            ⌨️ <span class="c-cyan fw-bold">F10</span> — Cockpit Unificado
-          </div>
-          <div style="font-size:0.68em; background:rgba(6,182,212,0.1); border:1px solid rgba(6,182,212,0.3); border-radius:20px; padding:4px 14px;">
-            💾 <span class="c-cyan fw-bold">Ctrl+S</span> — Guardar JSON
-          </div>
-          <div style="font-size:0.68em; background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); border-radius:20px; padding:4px 14px;">
-            🚦 <span class="c-amber fw-bold">Hora Punta 1.6x</span> — Factor de tráfico
-          </div>
-        </div>
-      </div>
-
-      <aside class="notes">
-        DEMO EN VIVO: 1) Presionar "Lote Demo" y seleccionar 10 pedidos. 2) Cambiar tráfico a "Hora Punta". 3) Click en "Iniciar Simulación". 4) Observar el mapa con las 5 rutas de colores distintos avanzando en paralelo. 5) Presionar F10 para ver el cockpit unificado. 6) Presionar Ctrl+D para activar modo oscuro. 7) Mostrar la vista de estadísticas con el gráfico circular.
-      </aside>
-    </section>
-
-    <!-- ══════════════════════════════════════════════
-         SLIDE 11 — PRUEBAS UNITARIAS
-    ══════════════════════════════════════════════ -->
+    <!-- ══════════════════════
+         10 — LIVE DEMO
+    ══════════════════════════ -->
     <section data-transition="slide">
-      <div class="expositor-badge" style="color:#94A3B8;">Todos los integrantes <span class="time">⏱ ~1 min</span></div>
-
-      <div class="slide-title-line">
-        <span class="slide-num">11</span>
-        <h2 style="font-size:1.3em; margin:0;">Pruebas Unitarias &amp; Control de Calidad</h2>
+      <div class="slide-header">
+        <div class="slide-num">10</div>
+        <h2>Demo — Cockpit Dashboard en Acción</h2>
       </div>
-      <div class="accent-line"></div>
+      <div class="divider"></div>
 
-      <div class="grid-2" style="gap:1em;">
+      <div class="g2" style="gap:.8em;">
         <div>
-          <div class="test-suite fragment fade-up">
-            <div class="ts-name">🧪 test_dominio — POO Avanzada</div>
-            <div class="ts-bar"><div class="ts-fill" style="animation-delay:0.2s;"></div></div>
-            <div class="ts-meta">41 aserciones · Polimorfismo, herencia, tarifas Strategy, encapsulamiento</div>
+          <div class="win fragment fade-up" onclick="openLb('../../img/Captura de pantalla 2026-11-16 164029.png')">
+            <div class="win-bar">
+              <div class="dot r"></div><div class="dot a"></div><div class="dot g"></div>
+              <span class="win-title">Simulación EN EJECUCIÓN — 5 repartidores activos</span>
+            </div>
+            <img src="../../img/Captura de pantalla 2026-11-16 164029.png" alt="Simulación activa" />
           </div>
-          <div class="test-suite fragment fade-up" style="animation-delay:0.3s;">
-            <div class="ts-name">🧪 test_generico — Templates &amp; STL</div>
-            <div class="ts-bar"><div class="ts-fill" style="animation-delay:0.4s;"></div></div>
-            <div class="ts-meta">39 aserciones · Cola&lt;T&gt;, Repositorio, Ruta, Singleton, lambdas</div>
+          <p class="txt-xxs c-muted" style="text-align:center;margin-top:4px;">Click para ampliar</p>
+        </div>
+
+        <div>
+          <div class="win fragment fade-up" onclick="openLb('../../img/Captura de pantalla 2026-11-16 164248.png')">
+            <div class="win-bar">
+              <div class="dot r"></div><div class="dot a"></div><div class="dot g"></div>
+              <span class="win-title">Estadísticas y KPIs en tiempo real</span>
+            </div>
+            <img src="../../img/Captura de pantalla 2026-11-16 164248.png" alt="Estadísticas" />
           </div>
-          <div class="test-suite fragment fade-up" style="animation-delay:0.5s;">
-            <div class="ts-name">🧪 test_threading — Concurrencia</div>
-            <div class="ts-bar"><div class="ts-fill" style="animation-delay:0.6s;"></div></div>
-            <div class="ts-meta">14 aserciones · Productor-consumidor, balanceo de carga, deadlock-free</div>
+          <p class="txt-xxs c-muted" style="text-align:center;margin-top:4px;">Click para ampliar</p>
+        </div>
+      </div>
+
+      <div class="card fragment fade-up" style="margin-top:.6em; padding:.6em 1em;">
+        <div style="display:flex;flex-wrap:wrap;gap:.4em;justify-content:center;">
+          <span class="pill pill-blue">🎲 Lote Demo — 10 pedidos en 1 clic</span>
+          <span class="pill pill-blue">🌙 Ctrl+D — Modo Oscuro</span>
+          <span class="pill pill-blue">⌨️ F10 — Cockpit Unificado</span>
+          <span class="pill pill-blue">💾 Ctrl+S — Guardar JSON</span>
+          <span class="pill pill-amber">🚦 Hora Punta 1.6x — Factor de tráfico</span>
+        </div>
+      </div>
+
+      <aside class="notes">
+        DEMO: 1) Lote Demo 10 pedidos. 2) Tráfico Hora Punta. 3) Iniciar Simulación. 4) Mostrar mapa con rutas. 5) F10 Cockpit unificado. 6) Ctrl+D modo oscuro. 7) Vista estadísticas con gráfico circular.
+      </aside>
+    </section>
+
+    <!-- ══════════════════════
+         11 — PRUEBAS
+    ══════════════════════════ -->
+    <section data-transition="slide">
+      <div class="slide-header">
+        <div class="slide-num">11</div>
+        <h2>Pruebas Unitarias &amp; Control de Calidad</h2>
+      </div>
+      <div class="divider"></div>
+
+      <div class="g2">
+        <div>
+          <div class="suite fragment fade-up">
+            <div class="sn">🧪 test_dominio — POO Avanzada</div>
+            <div class="bar"><div class="fill" style="animation-delay:.2s;"></div></div>
+            <div class="sm">41 aserciones · Polimorfismo, herencia, tarifas Strategy, encapsulamiento</div>
+          </div>
+          <div class="suite fragment fade-up" style="animation-delay:.15s;">
+            <div class="sn">🧪 test_generico — Templates &amp; STL</div>
+            <div class="bar"><div class="fill" style="animation-delay:.35s;"></div></div>
+            <div class="sm">39 aserciones · Cola&lt;T&gt;, Repositorio, Ruta, Singleton, lambdas</div>
+          </div>
+          <div class="suite fragment fade-up" style="animation-delay:.3s;">
+            <div class="sn">🧪 test_threading — Concurrencia</div>
+            <div class="bar"><div class="fill" style="animation-delay:.5s;"></div></div>
+            <div class="sm">14 aserciones · Productor-consumidor, balanceo, deadlock-free</div>
           </div>
         </div>
 
         <div class="fragment fade-up">
-          <div class="glass" style="text-align:center; padding:1.4em 1em; margin-bottom:0.7em;">
-            <div style="font-size:4em; font-weight:900; color:var(--green); line-height:1; text-shadow: 0 0 30px rgba(34,197,94,0.5);">100%</div>
-            <div style="font-size:0.8em; color:var(--text-muted); margin-top:0.3em;">Tests Passed — 3 / 3 suites</div>
-            <div style="font-size:0.65em; color:var(--text-muted); margin-top:0.2em;">94 aserciones · 0 fallos · 2.43 s</div>
+          <div class="card" style="text-align:center;padding:1.2em 1em; margin-bottom:.7em;">
+            <div style="font-size:4em;font-weight:800;color:var(--green);line-height:1;">100%</div>
+            <div class="txt-sm c-muted" style="margin-top:.2em;">Tests Passed — 3 / 3 suites</div>
+            <div class="txt-xxs c-muted">94 aserciones · 0 fallos · 2.43 s</div>
           </div>
 
           <pre style="font-size:0.65em;"><code class="language-bash">$ ctest --test-dir build --output-on-failure
@@ -1264,86 +1069,78 @@ Total Test time (real) = 2.43 sec</code></pre>
       </div>
 
       <aside class="notes">
-        Todas las suites pasan al 100%. test_threading es el más importante para nosotros: simula escenarios de concurrencia alta, comprueba que 9 pedidos se distribuyen correctamente entre conductores y verifica que no hay condiciones de carrera. El tiempo total de ejecución es menos de 3 segundos.
+        94 aserciones todas en verde. test_threading simula escenarios de alta concurrencia y verifica distribución equitativa entre conductores.
       </aside>
     </section>
 
-    <!-- ══════════════════════════════════════════════
-         SLIDE 12 — CONCLUSIONES
-    ══════════════════════════════════════════════ -->
-    <section data-transition="zoom">
-      <div class="expositor-badge" style="color:#94A3B8;">Todos los integrantes <span class="time">⏱ ~1 min</span></div>
-
-      <div class="slide-title-line">
-        <span class="slide-num">12</span>
-        <h2 style="font-size:1.3em; margin:0;">Conclusiones &amp; Logros Técnicos</h2>
+    <!-- ══════════════════════
+         12 — CONCLUSIONES
+    ══════════════════════════ -->
+    <section data-transition="fade">
+      <div class="slide-header">
+        <div class="slide-num">12</div>
+        <h2>Conclusiones y Logros del Proyecto</h2>
       </div>
-      <div class="accent-line"></div>
+      <div class="divider"></div>
 
-      <div class="grid-2" style="gap:1em; margin-bottom:0.8em;">
-        <div>
-          <div class="glass" style="padding:1em 1.2em;">
-            <div style="font-size:0.72em; font-weight:700; color:var(--cyan); margin-bottom:0.5em; text-transform:uppercase; letter-spacing:0.06em;">✅ Objetivos Académicos Cumplidos</div>
-            <ul style="font-size:0.68em; color:var(--text-muted); padding-left:1em; line-height:1.7em; margin:0;">
-              <li class="fragment fade-up"><strong style="color:var(--text-main)">POO Avanzada:</strong> 2 jerarquías abstractas, polimorfismo dinámico, RAII</li>
-              <li class="fragment fade-up"><strong style="color:var(--text-main)">5 Patrones GoF:</strong> Factory, Strategy, Singleton, Observer, MVC</li>
-              <li class="fragment fade-up"><strong style="color:var(--text-main)">3 Templates Propios:</strong> Cola&lt;T&gt;, Repositorio&lt;T,K&gt;, Ruta&lt;CoordType&gt;</li>
-              <li class="fragment fade-up"><strong style="color:var(--text-main)">Concurrencia:</strong> P/C multihilo, mutex, condition_variable, atomic</li>
-              <li class="fragment fade-up"><strong style="color:var(--text-main)">GUI Qt6:</strong> Cockpit, mapa vial real OSRM, telemetría HUD, modo oscuro</li>
-              <li class="fragment fade-up"><strong style="color:var(--text-main)">Calidad:</strong> 94 aserciones CTest al 100%, 0 memory leaks</li>
-            </ul>
-          </div>
+      <div class="g2" style="margin-bottom:.7em;">
+        <div class="card fragment fade-up">
+          <div class="txt-xs c-muted fw7" style="text-transform:uppercase;letter-spacing:.07em;margin-bottom:.5em;">✅ Objetivos Cumplidos</div>
+          <ul class="txt-xs" style="padding-left:1em;line-height:1.75em;margin:0;color:var(--gray2);">
+            <li><strong>POO Avanzada:</strong> 2 jerarquías abstractas, polimorfismo dinámico, RAII</li>
+            <li><strong>5 Patrones GoF:</strong> Factory, Strategy, Singleton, Observer, MVC</li>
+            <li><strong>3 Templates Propios:</strong> Cola&lt;T&gt;, Repositorio&lt;T,K&gt;, Ruta&lt;CoordType&gt;</li>
+            <li><strong>Concurrencia:</strong> P/C multihilo, mutex, condition_variable, atomic</li>
+            <li><strong>GUI Qt6:</strong> Cockpit, mapa vial real OSRM, telemetría HUD</li>
+            <li><strong>Calidad:</strong> 94 aserciones CTest al 100%, 0 memory leaks</li>
+          </ul>
         </div>
 
         <div>
-          <div class="glass fragment fade-up" style="padding:1em 1.2em; background:rgba(6,182,212,0.05); border-color:rgba(6,182,212,0.3);">
-            <div style="font-size:0.72em; font-weight:700; color:var(--cyan); margin-bottom:0.5em; text-transform:uppercase; letter-spacing:0.06em;">🌟 Valor Diferencial</div>
-            <ul style="font-size:0.68em; color:var(--text-muted); padding-left:1em; line-height:1.7em; margin:0;">
-              <li>Enrutamiento por calles <strong style="color:var(--cyan)">reales de Arequipa</strong> (870 rutas OSRM offline)</li>
-              <li>Simulación con <strong style="color:var(--cyan)">congestión de tráfico variable</strong> (1.0x → 1.6x)</li>
+          <div class="card card-blue fragment fade-up" style="margin-bottom:.6em;">
+            <div class="txt-xs c-muted fw7" style="text-transform:uppercase;letter-spacing:.07em;margin-bottom:.4em;">🌟 Valor Diferencial</div>
+            <ul class="txt-xs" style="padding-left:1em;line-height:1.65em;margin:0;color:var(--gray2);">
+              <li>Enrutamiento por calles <strong>reales de Arequipa</strong> (OSRM offline)</li>
+              <li>Factor de congestión de tráfico (1.0x → 1.6x)</li>
               <li>Mini-HUD de telemetría en tiempo real sobre el mapa</li>
-              <li>Generador de lote demo para sustentación en 1 clic</li>
               <li>Persistencia de sesión en JSON (Ctrl+S / Ctrl+O)</li>
             </ul>
           </div>
 
-          <div class="grid-4 fragment fade-up" style="gap:0.5em; margin-top:0.6em;">
-            <div class="metric-card"><div class="metric-val">9.7</div><div class="metric-label">Calificación Global</div></div>
-            <div class="metric-card"><div class="metric-val c-green">100%</div><div class="metric-label">Test Pass Rate</div></div>
-            <div class="metric-card"><div class="metric-val">5</div><div class="metric-label">Patrones GoF</div></div>
-            <div class="metric-card"><div class="metric-val c-amber">870</div><div class="metric-label">Rutas OSRM</div></div>
+          <div class="g4 fragment fade-up" style="gap:.4em;">
+            <div class="tile"><div class="val">9.7</div><div class="lbl">Calificación</div></div>
+            <div class="tile"><div class="val c-green">100%</div><div class="lbl">Test Pass</div></div>
+            <div class="tile"><div class="val">5</div><div class="lbl">Pat. GoF</div></div>
+            <div class="tile"><div class="val c-amber">870</div><div class="lbl">Rutas</div></div>
           </div>
         </div>
       </div>
 
-      <div class="glass fragment fade-up" style="text-align:center; padding:0.8em; background:rgba(6,182,212,0.06); border-color:rgba(6,182,212,0.3);">
-        <div style="font-size:0.85em; font-weight:600; color:var(--cyan);">🚀 GitHub: github.com/ChipanaGerman/SIGER</div>
-        <div style="font-size:0.65em; color:var(--text-muted); margin-top:0.2em;">Branch: main · Commit: 73abf91 · Autoría: German Arturo Chipana Jeronimo</div>
+      <div class="card card-blue fragment fade-up" style="text-align:center;padding:.7em;">
+        <div class="txt-sm fw7 c-blue">🔗 github.com/ChipanaGerman/SIGER</div>
+        <div class="txt-xxs c-muted mt4">Branch: main · Tecnología de Objetos · UNSA 2026</div>
       </div>
 
       <aside class="notes">
-        Para concluir: SIGER supera los requerimientos académicos en todos los rubros. Implementamos 5 patrones GoF, plantillas genéricas propias, concurrencia real multihilo sin deadlocks verificados por pruebas automatizadas, y una interfaz gráfica con enrutamiento vial por calles reales de Arequipa. ¿Alguna pregunta del jurado?
+        SIGER supera los requerimientos del curso en todos los rubros. 5 patrones GoF, templates propios, concurrencia sin deadlocks, enrutamiento vial real de Arequipa. Gracias. ¿Preguntas?
       </aside>
     </section>
 
-  </div><!-- /slides -->
-</div><!-- /reveal -->
+  </div>
+</div>
 
-<!-- Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/zoom/zoom.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/highlight.min.js"></script>
 
 <script>
-  // ── Reveal.js Init ──────────────────────────────
   Reveal.initialize({
     hash: true,
     slideNumber: 'c/t',
     transition: 'slide',
     transitionSpeed: 'default',
-    backgroundTransition: 'fade',
+    backgroundTransition: 'none',
     center: true,
     width: 1280,
     height: 720,
@@ -1355,50 +1152,15 @@ Total Test time (real) = 2.43 sec</code></pre>
     plugins: [ RevealNotes, RevealHighlight, RevealZoom ]
   });
 
-  // ── Nodos de fondo ──────────────────────────────
-  const positions = [
-    [12,15],[28,42],[55,8],[72,65],[88,22],[45,78],
-    [65,35],[33,88],[80,50],[18,60],[50,25],[90,80]
-  ];
-  const container = document.getElementById('bgNodes');
-  positions.forEach(([left, top], i) => {
-    const el = document.createElement('div');
-    el.className = 'bg-node';
-    el.style.left = left + '%';
-    el.style.top  = top  + '%';
-    el.style.animationDelay = (i * 0.4) + 's';
-    el.style.animationDuration = (2.5 + i * 0.3) + 's';
-    container.appendChild(el);
-
-    // Líneas entre nodos cercanos
-    if (i > 0 && i % 3 === 0) {
-      const prev = positions[i - 1];
-      const line = document.createElement('div');
-      line.style.cssText = `
-        position:absolute;
-        left:${prev[0]}%;
-        top:${prev[1]}%;
-        width:${Math.abs(left - prev[0])}%;
-        height:1px;
-        background:linear-gradient(90deg,rgba(6,182,212,0.15),rgba(6,182,212,0.05));
-        transform-origin:left center;
-        pointer-events:none;
-      `;
-      container.appendChild(line);
-    }
-  });
-
-  // ── Lightbox ────────────────────────────────────
-  function openLightbox(src) {
-    const lb = document.getElementById('lightbox');
+  function openLb(src) {
     document.getElementById('lbImg').src = src;
-    lb.classList.add('active');
+    document.getElementById('lb').classList.add('on');
   }
-  function closeLightbox() {
-    document.getElementById('lightbox').classList.remove('active');
+  function closeLb() {
+    document.getElementById('lb').classList.remove('on');
   }
   document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') closeLightbox();
+    if (e.key === 'Escape') closeLb();
   });
 </script>
 </body>
