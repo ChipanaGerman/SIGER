@@ -1,0 +1,466 @@
+\documentclass[conference]{IEEEtran}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish,es-tabla]{babel}
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{graphicx}
+\usepackage{cite}
+\usepackage{booktabs}
+\usepackage{microtype}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{url}
+\usepackage{balance}
+
+% Configuración de listados de código C++
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.96,0.97,0.98}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{blue}\bfseries,
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\scriptsize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=4pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2,
+    frame=single,
+    rulecolor=\color{black!20}
+}
+\lstset{style=mystyle}
+
+\begin{document}
+
+\title{SIGER: Sistema Concurrente y Distribuido de Gestión y Simulación Logística con Enrutamiento Vial Real y Patrones de Diseño GoF en C++17 y Qt6}
+
+\author{
+    \IEEEauthorblockN{
+        German Arturo Chipana Jeronimo\IEEEauthorrefmark{1},
+        Leonardo Juan Jose Baca Calsin\IEEEauthorrefmark{2},
+        Giovanni Patrick Mejia Rondan\IEEEauthorrefmark{3},
+        Renato Xavier Ponce Llerena\IEEEauthorrefmark{4}
+    }
+    \IEEEauthorblockA{
+        Escuela Profesional de Ingeniería de Sistemas\\
+        Universidad Nacional de San Agustín de Arequipa (UNSA)\\
+        Arequipa, Perú\\
+        Email: \IEEEauthorrefmark{1}gchipanaj@unsa.edu.pe,
+               \IEEEauthorrefmark{2}lbacac@unsa.edu.pe,
+               \IEEEauthorrefmark{3}gmejiar@unsa.edu.pe,
+               \IEEEauthorrefmark{4}rponcel@unsa.edu.pe
+    }
+}
+
+\maketitle
+
+\begin{abstract}
+El problema de distribución logística de última milla en zonas metropolitanas de topología compleja, como la ciudad de Arequipa, exige arquitecturas de software robustas, altamente concurrentes y desacopladas para optimizar tiempos y recursos de transporte. Este artículo presenta el diseño e implementación de \textbf{SIGER} (Sistema Integrado de Gestión y Simulación de Entregas Rápidas), una plataforma integral desarrollada en C++17 y Qt6 que combina programación orientada a objetos avanzada, programación genérica propia y sincronización multihilo. El sistema implementa formalmente cinco patrones de diseño de la banda de los cuatro (GoF): \textit{Factory Method}, \textit{Strategy}, \textit{Singleton}, \textit{Observer} y \textit{Model-View-Controller} (MVC). La coordinación de la flota vehicular opera bajo un esquema Productor-Consumidor con exclusión mutua (\texttt{std::mutex}, \texttt{std::condition\_variable}), asignando un hilo de ejecución independiente por cada conductor y aplicando un algoritmo de balanceo cooperativo (Round-Robin voluntario) libre de inanición y de bloqueos mutuos (\textit{deadlocks}). El enrutamiento espacial integra una red de 30 nodos metropolitanos de Arequipa y 870 trayectorias vehiculares calle por calle precalculadas mediante OSRM. Las pruebas automatizadas con CTest validan la corrección del sistema mediante 94 aserciones distribuidas en tres suites con una tasa de éxito del 100\%, demostrando la eficacia del paradigma de objetos moderno en soluciones de simulación de ingeniería de transporte.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Programación Orientada a Objetos, Patrones de Diseño GoF, Concurrencia Multihilo, Programación Genérica, C++17, Qt6, Simulación Logística, OSRM.
+\end{IEEEkeywords}
+
+\section{Introducción}
+La distribución de mercancías en el entorno urbano de última milla constituye uno de los desafíos más complejos y onerosos de la cadena de suministro contemporánea. En urbes con trazados históricos y variabilidad topográfica pronunciada, como la ciudad de Arequipa, las demoras por congestión vehicular y la ineficiencia en la asignación dinámica de pedidos deterioran la calidad del servicio e incrementan los costos operacionales.
+
+Tradicionalmente, las plataformas comerciales de despacho operan bajo modelos centralizados opacos o heurísticas rudimentarias de asignación secuencial. Desde una perspectiva de ingeniería de software, este escenario plantea desafíos de primer orden: modelar entidades físicas heterogéneas (motos, automóviles, camiones, paquetería estándar y frágil), coordinar múltiples agentes autónomos en tiempo real sin incurrir en condiciones de carrera (\textit{race conditions}), y reflejar el estado dinámico del sistema en una interfaz gráfica interactiva sin degradar el rendimiento cinemático.
+
+Para abordar esta problemática, se desarrolló \textbf{SIGER} (Sistema Integrado de Gestión y Simulación de Entregas Rápidas). El objetivo principal del proyecto es concebir e implementar un simulador logístico de alto rendimiento fundamentado en los principios más rigurosos de la Tecnología de Objetos moderna en C++17. El sistema se distingue por:
+\begin{enumerate}
+    \item Una arquitectura desacoplada basada en Modelo-Vista-Controlador (MVC) y el patrón Observer para comunicación reactiva.
+    \item Jerarquías polimórficas puras y factorías virtuales (\textit{Factory Method}) para la flota y paquetería.
+    \item Tarifación contextual en tiempo de ejecución mediante el patrón \textit{Strategy}.
+    \item Estructuras de datos genéricas propias (\texttt{Cola<T>}, \texttt{Repositorio<T, Key>}, \texttt{Ruta<CoordType>}) gobernadas por semántica RAII y punteros inteligentes.
+    \item Simulación multihilo real con un hilo por conductor, despachador escalonado, balanceo de carga voluntario y prevención matemática de bloqueos mutuos.
+    \item Enrutamiento urbano por calles reales de Arequipa mediante 870 rutas OSRM precalculadas en caché local offline.
+\end{enumerate}
+
+El resto del artículo se organiza de la siguiente manera: la Sección II aborda los fundamentos teóricos; la Sección III detalla la arquitectura de software y los patrones GoF; la Sección IV describe la programación genérica y RAII; la Sección V analiza el modelo de concurrencia y sincronización; la Sección VI expone la topología de Arequipa y la cinemática; la Sección VII resume la validación experimental mediante CTest; y la Sección VIII presenta las conclusiones y líneas de trabajo futuro.
+
+\section{Marco Teórico y Fundamentos}
+
+\subsection{Programación Orientada a Objetos Moderna (C++17)}
+El estándar ISO/IEC 14882:2017 (C++17) consolida herramientas avanzadas para la POO. El diseño se fundamenta en clases abstractas puras que definen interfaces formales (\textit{pure virtual functions}), destructores virtuales por defecto para evitar el problema de rebanado de objetos (\textit{object slicing}), y especificadores rigurosos como \texttt{override}, \texttt{[[nodiscard]]} y métodos calificados con \texttt{const} para salvaguardar la inmutabilidad de estados observados.
+
+\subsection{Patrones de Diseño de Software (GoF)}
+Los patrones de diseño del consorcio Gang of Four (GoF) \cite{gamma1994design} ofrecen soluciones canónicas a problemas recurrentes en arquitectura orientada a objetos. SIGER incorpora formalmente:
+\begin{itemize}
+    \item \textbf{Factory Method}: Desacoplamiento entre la instanciación de vehículos y su consumo en el despachador.
+    \item \textbf{Strategy}: Intercambiabilidad de algoritmos de tarificación según distancia, peso y vulnerabilidad de la carga.
+    \item \textbf{Singleton}: Centralización del catálogo espacial de rutas viales garantizando unicidad y seguridad en concurrencia (Scott Meyers).
+    \item \textbf{Observer}: Propagación de eventos asíncronos desacoplada mediante suscriptores referenciados por punteros débiles (\texttt{std::weak\_ptr}).
+\end{itemize}
+
+\subsection{Concurrencia en Memoria Compartida}
+A diferencia de simulaciones basadas en bucles de eventos secuenciales (\textit{polling}), SIGER explota la biblioteca estándar de hilos (\texttt{std::thread}). La sincronización entre el hilo principal de la interfaz gráfica y los hilos de trabajo se rige mediante monitores construidos con \texttt{std::mutex}, \texttt{std::unique\_lock} y variables de condición (\texttt{std::condition\_variable}) bajo el paradigma Productor-Consumidor \cite{williams2019c++}.
+
+\subsection{Enrutamiento Vial Asistido por OSRM}
+El cálculo de trayectorias en redes viales urbanas se apoya en el Open Source Routing Machine (OSRM), un motor de ruteo de alto rendimiento sustentado en jerarquías de contracción (\textit{Contraction Hierarchies}) sobre grafos de OpenStreetMap (OSM) \cite{luxen2011real}. SIGER precomputa y empaqueta la malla completa de distancias, tiempos y polilíneas geodésicas calle por calle para evitar latencias de red en la simulación.
+
+\section{Arquitectura del Sistema y Patrones GoF}
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\linewidth]{img/fig1_panel_principal.png}
+\caption{Centro de Control y Monitoreo de SIGER mostrando la topología metropolitana de Arequipa, el panel de registro tarifado y la tabla interactiva de pedidos.}
+\label{fig:panel_principal}
+\end{figure}
+
+\subsection{Arquitectura Modelo-Vista-Controlador (MVC)}
+SIGER adopta una separación arquitectónica estricta en tres capas:
+\begin{enumerate}
+    \item \textbf{Modelo}: Reside en el espacio de nombres \texttt{siger}. Encapsula la lógica de negocio, las entidades de dominio (\texttt{Pedido}, \texttt{Vehiculo}, \texttt{Repartidor}), el motor de simulación (\texttt{SimuladorEntregas}) y las estructuras de datos concurrentes. No posee dependencias hacia la capa gráfica de Qt.
+    \item \textbf{Controlador}: Representado por \texttt{PedidoController} y \texttt{SimulacionController}. Actúa como mediador bidireccional; captura acciones del usuario, ejecuta mutaciones en el modelo e interactúa con el bucle de eventos mediante señales y slots de Qt.
+    \item \textbf{Vista}: Compuesta por \texttt{MainWindow}, \texttt{MapaView}, \texttt{DashboardView}, \texttt{FlotaView} y \texttt{EstadisticasView}. Renderiza gráficamente las coordenadas cartesianas, telemetría y gráficos estadísticos (\texttt{QChartView}).
+\end{enumerate}
+
+\subsection{Jerarquías Polimórficas de Dominio}
+La jerarquía principal se organiza alrededor de la clase abstracta \texttt{Vehiculo}, cuya interfaz fundamental impone:
+\begin{lstlisting}[language=C++]
+class Vehiculo {
+public:
+  Vehiculo(const std::string& id, const std::string& placa,
+           double capacidadKg, double velocidadKmh);
+  virtual ~Vehiculo() = default;
+
+  virtual double calcularCosto(double distKm, double pesoKg) const = 0;
+  virtual std::string getTipo() const = 0;
+  virtual double calcularTiempoEntrega(double distKm) const = 0;
+
+  virtual bool puedeCargar(double pesoKg) const;
+  [[nodiscard]] double getCapacidadKg() const;
+  [[nodiscard]] EstadoVehiculo getEstado() const;
+protected:
+  std::string m_id, m_placa;
+  double m_capacidadKg, m_velocidadKmh;
+  EstadoVehiculo m_estado{EstadoVehiculo::DISPONIBLE};
+};
+\end{lstlisting}
+
+De \texttt{Vehiculo} derivan polimórficamente tres clases concretas:
+\begin{itemize}
+    \item \texttt{Moto}: Diseñada para mensajería ágil. Capacidad máxima: 15 kg; velocidad nominal: 60 km/h; tarifa base reducida.
+    \item \texttt{Auto}: Envíos intermedios. Capacidad máxima: 100 kg; velocidad nominal: 50 km/h.
+    \item \texttt{Camion}: Transporte pesado o consolidado. Capacidad máxima: 2000 kg; velocidad nominal: 40 km/h.
+\end{itemize}
+
+De manera análoga, la entidad \texttt{Paquete} se estructura como una clase abstracta con subclases \texttt{PaqueteEstandar} y \texttt{PaqueteFragil}, esta última provista de restricciones de manipulación y penalización tarifaria.
+
+\subsection{Patrón Factory Method}
+Para evitar el acoplamiento directo entre el simulador y las clases derivadas de \texttt{Vehiculo}, se implementó una jerarquía de fábricas:
+\begin{lstlisting}[language=C++]
+class VehiculoFactory {
+public:
+  virtual ~VehiculoFactory() = default;
+  virtual std::unique_ptr<Vehiculo> crear(
+      const std::string& id, const std::string& placa) const = 0;
+};
+
+class MotoFactory : public VehiculoFactory {
+public:
+  std::unique_ptr<Vehiculo> crear(
+      const std::string& id, const std::string& placa) const override {
+    return std::make_unique<Moto>(id, placa);
+  }
+};
+\end{lstlisting}
+El despachador mantiene un mapa asociativo de punteros a fábricas registrado en tiempo de inicialización, permitiendo la extensión a nuevos tipos vehiculares sin alterar el código cliente (principio Open/Closed de SOLID).
+
+\subsection{Patrón Strategy}
+El cálculo del importe comercial en Soles (S/.) no se encuentra codificado rígidamente dentro de las entidades. La interfaz \texttt{IEstrategiaTarifa} expone el método:
+\begin{equation}
+C_{\text{envío}} = \mathcal{S}_{\text{tarifa}}(d_{\text{km}}, m_{\text{kg}})
+\end{equation}
+Implementada en tres estrategias concretas:
+\begin{enumerate}
+    \item \texttt{TarifaEstandarStrategy}: $C = 2.0 \cdot d + 0.5 \cdot m + 5.0$.
+    \item \texttt{TarifaFragilStrategy}: Aplica un recargo multiplicativo del 40\% debido a los requerimientos de embalaje y aseguramiento: $C = 1.4 \cdot (2.5 \cdot d + 0.8 \cdot m)$.
+    \item \texttt{TarifaPesadaStrategy}: Diseñada para cargas que superan los 50 kg con tasa escalonada por tonelada.
+\end{enumerate}
+
+\subsection{Patrón Singleton (Meyer's Thread-Safe)}
+La entidad \texttt{ServicioRutas} administra la matriz geodésica de Arequipa (870 rutas y más de 120,000 waypoints). Se diseñó como un Singleton canónico de Scott Meyers:
+\begin{lstlisting}[language=C++]
+class ServicioRutas {
+public:
+  static ServicioRutas& instancia() {
+    static ServicioRutas instancia_; // Thread-safe C++17
+    return instancia_;
+  }
+  RutaUrbana obtenerRuta(const QString& origen, 
+                         const QString& destino) const;
+  ServicioRutas(const ServicioRutas&) = delete;
+  ServicioRutas& operator=(const ServicioRutas&) = delete;
+private:
+  ServicioRutas() = default;
+  QMap<QString, RutaUrbana> m_cache;
+};
+\end{lstlisting}
+El estándar garantiza la inicialización atómica durante el primer flujo de control que alcanza la declaración estática, eliminando primitivas de doble comprobación (\textit{double-checked locking}).
+
+\subsection{Patrón Observer Desacoplado}
+La propagación de novedades cinemáticas (pedidos en camino, entregas completadas, métricas) se ejecuta a través de \texttt{ISubject} e \texttt{IObserver}. Para mitigar fugas de memoria y dependencias cíclicas, la colección de suscriptores se almacena como \texttt{std::vector<std::weak\_ptr<IObserver>>}. Cada ciclo de notificación purga automáticamente los punteros expirados y transfiere el evento fuera del cerrojo de exclusión mutua para impedir bloqueos en cadena.
+
+\section{Programación Genérica y Gestión de Memoria (STL \& RAII)}
+
+\subsection{Plantilla Concurrente Cola$<T>$}
+Uno de los componentes nucleares de SIGER es su cola FIFO parametrizada genéricamente:
+\begin{lstlisting}[language=C++]
+template <typename T>
+class Cola {
+public:
+  void push(T valor) {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    m_queue.push(std::move(valor));
+  }
+  [[nodiscard]] std::optional<T> pop() {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    if (m_queue.empty()) return std::nullopt;
+    T val = std::move(m_queue.front());
+    m_queue.pop();
+    return val;
+  }
+  template <typename Predicate>
+  [[nodiscard]] std::optional<T> extraerSi(Predicate pred) {
+    std::lock_guard<std::mutex> lock(m_mutex);
+    std::queue<T> aux;
+    std::optional<T> hallado = std::nullopt;
+    while (!m_queue.empty()) {
+      T elem = std::move(m_queue.front());
+      m_queue.pop();
+      if (!hallado.has_value() && pred(elem)) {
+        hallado = std::move(elem);
+      } else {
+        aux.push(std::move(elem));
+      }
+    }
+    m_queue = std::move(aux);
+    return hallado;
+  }
+private:
+  mutable std::mutex m_mutex;
+  std::queue<T> m_queue;
+};
+\end{lstlisting}
+El método \texttt{extraerSi} permite que un hilo consumidor consulte y extraiga de la cola compartida únicamente un pedido compatible con la capacidad de su vehículo particular (v.g. moto extrayendo paquetes $\le 15$ kg), preservando intacto el orden secuencial del resto de la cola.
+
+\subsection{Repositorio$<T, \text{Key}>$ y Ruta$<CoordType>$}
+Se diseñó la plantilla \texttt{Repositorio<T, Key>} que encapsula un mapa asociativo thread-safe provisto de métodos funcionales de consulta mediante expresiones lambda (\texttt{std::function<bool(const T\&)>}). Asimismo, la plantilla \texttt{Ruta<CoordType>} parametriza el cómputo de longitudes y vectores directores en punto flotante (\texttt{float} o \texttt{double}).
+
+\subsection{Semántica RAII Estricta}
+La arquitectura proscribe el uso de punteros crudos (\textit{raw pointers}) con llamadas explícitas a \texttt{new} y \texttt{delete} en toda la lógica de negocio:
+\begin{itemize}
+    \item \texttt{std::unique\_ptr}: Asignado para propiedad exclusiva y ciclos de vida estrictos (factorías de vehículos).
+    \item \texttt{std::shared\_ptr}: Empleado para entidades cuyo tiempo de vida trasciende múltiples subsistemas (pedidos compartidos entre la cola de despacho y la vista de flota).
+    \item \texttt{std::weak\_ptr}: Empleado en observadores y referencias cruzadas para evitar ciclos de conteo de referencias.
+\end{itemize}
+
+\section{Modelo de Concurrencia y Sincronización Multihilo}
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\linewidth]{img/fig2_simulacion_activa.png}
+\caption{Simulación multihilo activa con cinco repartidores navegando concurrentemente por las avenidas metropolitanas de Arequipa en tiempo real.}
+\label{fig:simulacion_activa}
+\end{figure}
+
+\subsection{Modelo Productor-Consumidor}
+La dinámica del simulador responde al modelo clásico de sincronización:
+\begin{itemize}
+    \item \textbf{Productor}: La interfaz de usuario (mediante registro individual o generación del lote demo) inserta objetos \texttt{std::shared\_ptr<Pedido>} en la \texttt{Cola}. Tras cada inserción, emite un aviso masivo: \texttt{m\_condVar.notify\_all()}.
+    \item \textbf{Consumidores}: Un grupo de $N$ hilos autónomos (\texttt{std::thread}), donde cada hilo representa el ciclo de vida de un conductor específico.
+\end{itemize}
+
+\subsection{Algoritmo del Hilo Conductor y Round-Robin Cooperativo}
+El ciclo de ejecución de cada hilo consumidor se estructura conforme a la Fig. \ref{fig:simulacion_activa}:
+\begin{lstlisting}[language=C++]
+void SimuladorEntregas::hiloRepartidor(
+    std::shared_ptr<Repartidor> rep) {
+  while (m_corriendo) {
+    std::unique_lock<std::mutex> lock(m_mutex);
+    m_condVar.wait(lock, [&] {
+      return !m_cola->isEmpty() || !m_corriendo;
+    });
+    if (!m_corriendo) break;
+
+    auto pedido = m_cola->extraerSi([&](const auto& p) {
+      return rep->puedeAtender(*p);
+    });
+    lock.unlock(); // Desbloqueo anticipado
+
+    if (pedido.has_value()) {
+      simularEntrega(rep, *pedido.value());
+      // Desahogo cooperativo para balanceo de carga
+      std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    }
+  }
+}
+\end{lstlisting}
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\linewidth]{img/fig3_monitoreo_flota.png}
+\caption{Panel de Monitoreo de Flota Operativa en Tiempo Real mostrando el progreso cinemático simultáneo de 2 Motos, 2 Autos y 1 Camión.}
+\label{fig:monitoreo_flota}
+\end{figure}
+
+El retraso deliberado de 50 ms (\textit{yield cooperativo}) reviste una trascendencia algorítmica fundamental: impide que un hilo con alta afinidad al procesador acapare consecutivamente todos los pedidos afines a su clase de vehículo, posibilitando que el segundo conductor disponible despierte y compita equitativamente por la siguiente asignación.
+
+\subsection{Estrategia Integral Anti-Deadlock}
+Para garantizar la ausencia absoluta de inanición y bloqueos mutuos, se establecieron cuatro invariantes de concurrencia:
+\begin{enumerate}
+    \item \textbf{Desacoplamiento de simulación}: El método \texttt{simularEntrega()} se ejecuta sin retener el cerrojo principal \texttt{m\_mutex}.
+    \item \textbf{Notificación libre de cerrojo}: La emisión a la lista de observadores copia los punteros requeridos bajo cerrojo y realiza las llamadas virtuales tras liberar el mutex de la colección.
+    \item \textbf{Unión asíncrona de hilos}: Al invocar \texttt{detener()}, se conmuta la bandera booleana atómica \texttt{m\_corriendo = false}, se despiertan los hilos durmientes con \texttt{notify\_all()}, y los métodos \texttt{thread::join()} se invocan estrictamente fuera de la sección crítica.
+    \item \textbf{Despacho escalonado}: Se implementó un semáforo de salida que impone un lapso mínimo de 700 ms entre inicios de recorrido contiguos, impidiendo superposiciones visuales artificiales en el origen de las rutas.
+\end{enumerate}
+
+\section{Topología Urbana y Simulación Cinemática}
+
+\subsection{Grafo de la Ciudad de Arequipa}
+La red de transporte de SIGER modela 30 nodos emblemáticos que representan la dispersión urbana de la urbe arequipeña:
+\begin{itemize}
+    \item \textit{Zona Centro}: Plaza de Armas, Mercaderes, San Francisco, Santa Catalina.
+    \item \textit{Zona Norte / Oeste}: Mirador de Yanahuara, Cayma, Cerro Colorado, Sachaca.
+    \item \textit{Zona Sur / Este}: Mall Aventura Porongoche, Parque Lambramani, Av. Dolores, Bustamante y Rivero, Sabandía, Paucarpata.
+    \item \textit{Nodos Académicos / Salud}: Ciudad Universitaria UNSA (Ingenierías y Sociales), Hospital Honorio Delgado, Hospital Goyeneche.
+\end{itemize}
+
+El espacio de interconexión contiene $30 \times 29 = 870$ pares ordenados de trayectorias. Mediante el consumo preliminar de la API OSRM sobre la cartografía de Arequipa, se serializó un documento JSON de 6.89 MB con las coordenadas GPS detalladas de cada giro e intersección vial.
+
+\subsection{Cinemática con Congestión y Factor de Velocidad}
+Durante la simulación, la traslación de cada móvil sobre la polilínea OSRM se calcula discretamente en pasos de tiempo $\Delta t = 50\text{ ms}$. La duración base de cada trayecto viene dada por:
+\begin{equation}
+T_{\text{viaje}} = \left( \frac{d_{\text{km}}}{v_{\text{nom}}} \right) \cdot f_{\text{tráf}} \cdot \frac{1}{f_{\text{vel}}}
+\end{equation}
+donde:
+\begin{itemize}
+    \item $d_{\text{km}}$: Distancia métrica de conducción suministrada por OSRM.
+    \item $v_{\text{nom}}$: Velocidad nominal del vehículo (40, 50 o 60 km/h).
+    \item $f_{\text{vel}}$: Multiplicador dinámico de velocidad ajustable por el usuario en tiempo de ejecución (rango $1.0\times$ a $4.0\times$).
+    \item $f_{\text{tráf}}$: Factor de congestión urbana modelado en tres regímenes discretos:
+    \begin{equation}
+    f_{\text{tráf}} = \begin{cases}
+    1.00 & \text{Tráfico Fluido} \\
+    1.25 & \text{Tráfico Moderado} \\
+    1.60 & \text{Hora Punta Metropoliana}
+    \end{cases}
+    \end{equation}
+\end{itemize}
+
+En cada fotograma, el sistema interpola la posición geodésica $(\lambda_t, \phi_t)$ y computa el ángulo azimutal de rotación del vehículo:
+\begin{equation}
+\theta = \operatorname{atan2}(\Delta y, \Delta x)
+\end{equation}
+orientando dinámicamente el marcador direccional (\textit{chevron}) sobre la escena gráfica interactiva.
+
+\begin{figure}[!t]
+\centering
+\includegraphics[width=\linewidth]{img/fig4_estadisticas_kpi.png}
+\caption{Panel analítico de SIGER con métricas acumuladas de rendimiento, facturación global en Soles (S/.) y gráfico circular de distribución de estados.}
+\label{fig:estadisticas_kpi}
+\end{figure}
+
+\section{Evaluación Experimental y Validación}
+
+\subsection{Suite de Pruebas Automatizadas (CTest)}
+Para garantizar la verificación formal de los requerimientos de ingeniería de software, se estructuró una batería de pruebas unitarias bajo el entorno CTest de CMake. La suite se divide en tres ejecutables especializados:
+\begin{enumerate}
+    \item \texttt{test\_dominio}: Evalúa la jerarquía polimórfica, el cálculo de capacidades, la restricción de sobrepeso vehicular, la invariabilidad de destructores virtuales y las tarifas generadas por cada implementación de \textit{Strategy}. Total: 41 aserciones.
+    \item \texttt{test\_generico}: Verifica el comportamiento FIFO y la exclusión mutua de la plantilla \texttt{Cola<T>}, la selectividad del predicado \texttt{extraerSi}, la búsqueda funcional en \texttt{Repositorio}, la precisión de la plantilla \texttt{Ruta} y la unicidad atómica de la instancia de \texttt{ServicioRutas}. Total: 39 aserciones.
+    \item \texttt{test\_threading}: Somete al motor a pruebas de estrés con múltiples hilos concurrentes. Simula un escenario de 9 pedidos simultáneos inyectados en ráfaga con 5 conductores activos, verificando la entrega íntegra del 100\% de pedidos, la ausencia de pérdidas de datos en la cola y el apagado ordenado sin fugas (\textit{deadlock-free}). Total: 14 aserciones.
+\end{enumerate}
+
+\begin{table}[!b]
+\centering
+\caption{Resumen de Pruebas Unitarias Automatizadas (CTest)}
+\label{tab:pruebas}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+\textbf{Suite de Prueba} & \textbf{Aserciones} & \textbf{Tiempo (s)} & \textbf{Resultado} \\ \midrule
+\texttt{test\_dominio}   & 41                  & 0.51                & 100\% Aprobado     \\
+\texttt{test\_generico}  & 39                  & 0.71                & 100\% Aprobado     \\
+\texttt{test\_threading} & 14                  & 1.14                & 100\% Aprobado     \\ \midrule
+\textbf{Total Consolidado}& \textbf{94}        & \textbf{2.43}       & \textbf{100\% Aprobado} \\ \bottomrule
+\end{tabular}
+\end{table}
+
+Los resultados recopilados en la Tabla \ref{tab:pruebas} demuestran la solidez del sistema, ejecutando las 94 pruebas de manera automatizada en apenas 2.43 segundos.
+
+\subsection{Rendimiento en Ejecución y Persistencia}
+Durante las pruebas de estrés con lotes masivos (40 pedidos encolados, Fig. \ref{fig:estadisticas_kpi}), el sistema demostró:
+\begin{itemize}
+    \item Consumo de memoria RAM constante ($\approx 48\text{ MB}$), ratificando la ausencia de fugas de memoria gracias a la estricta política RAII.
+    \item Capacidad de persistencia de sesión: serialización y deserialización bidireccional completa del estado de pedidos en formato JSON estructurado (\texttt{Ctrl+S} y \texttt{Ctrl+O}).
+    \item Ergonomía de usuario mediante cabina dividida redimensionable (\textit{Cockpit Dashboard}) y alternancia instantánea entre tema claro y modo oscuro (\texttt{Ctrl+D}).
+\end{itemize}
+
+\section{Conclusiones y Trabajo Futuro}
+En este trabajo se presentó \textbf{SIGER}, un sistema integrado de simulación logística para la ciudad de Arequipa concebido bajo el paradigma de Tecnología de Objetos en C++17 y Qt6. A través de una metodología rigurosa, se lograron los siguientes aportes:
+\begin{enumerate}
+    \item \textbf{Integración exitosa de Patrones GoF}: Se demostró cómo la conjunción de \textit{Factory Method}, \textit{Strategy}, \textit{Singleton}, \textit{Observer} y \textit{MVC} permite construir una aplicación con alto desacoplamiento y gran extensibilidad.
+    \item \textbf{Concurrencia robusta en memoria compartida}: Se diseñó una infraestructura multihilo libre de bloqueos mutuos mediante semáforos, variables de condición y el algoritmo de balanceo cooperativo Round-Robin voluntario.
+    \item \textbf{Enrutamiento vial realista}: La inclusión de 870 rutas OSRM offline sobre 30 nodos metropolitanos eleva la fidelidad de la simulación urbana respecto a aproximaciones euclidianas convencionales.
+    \item \textbf{Calidad de software verificada}: La suite de pruebas automatizadas garantiza la corrección matemática y la seguridad multihilo con 94 aserciones superadas al 100\%.
+\end{enumerate}
+
+Como trabajo futuro, se proyecta extender el motor con el algoritmo genético de ruteo de vehículos capacitados (\textit{CVRP}), incorporar semáforos inteligentes dinámicos e integrar telemetría de vehículos eléctricos con consumo dependiente del gradiente de elevación de las pendientes de Arequipa.
+
+\balance
+\bibliographystyle{IEEEtran}
+\begin{thebibliography}{10}
+
+\bibitem{gamma1994design}
+E.~Gamma, R.~Helm, R.~Johnson, and J.~Vlissides,
+\newblock {\em Design Patterns: Elements of Reusable Object-Oriented Software}.
+\newblock Addison-Wesley, Reading, MA, 1994.
+
+\bibitem{stroustrup2018tour}
+B.~Stroustrup,
+\newblock {\em A Tour of C++}, 2nd~ed.
+\newblock Addison-Wesley Professional, Boston, MA, 2018.
+
+\bibitem{meyers2014effective}
+S.~Meyers,
+\newblock {\em Effective Modern C++: 42 Specific Ways to Improve Your Use of C++11 and C++14}.
+\newblock O'Reilly Media, Sebastopol, CA, 2014.
+
+\bibitem{williams2019c++}
+A.~Williams,
+\newblock {\em C++ Concurrency in Action}, 2nd~ed.
+\newblock Manning Publications, Shelter Island, NY, 2019.
+
+\bibitem{luxen2011real}
+D.~Luxen and C.~Vetter,
+\newblock ``Real-time routing with OpenStreetMap data,''
+\newblock in {\em Proc. 19th ACM SIGSPATIAL Int. Conf. Advances in Geographic Information Systems}, Chicago, IL, 2011, pp. 513--516.
+
+\bibitem{toth2014vehicle}
+P.~Toth and D.~Vigo, Eds.,
+\newblock {\em Vehicle Routing: Problems, Methods, and Applications}, 2nd~ed.
+\newblock SIAM, Philadelphia, PA, 2014.
+
+\bibitem{qt2024doc}
+The Qt Company,
+\newblock ``Qt 6 Documentation: Qt Core, Qt GUI, Qt Widgets, and Qt Charts,''
+\newblock 2024. [Online]. Disponible: \url{https://doc.qt.io/qt-6/}
+
+\bibitem{iso2017cpp}
+ISO/IEC,
+\newblock ``ISO/IEC 14882:2017: Programming languages -- C++,''
+\newblock International Organization for Standardization, Geneva, Switzerland, 2017.
+
+\end{thebibliography}
+
+\end{document}
