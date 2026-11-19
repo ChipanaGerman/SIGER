@@ -1,6 +1,6 @@
 \documentclass[conference]{IEEEtran}
 \usepackage[utf8]{inputenc}
-\usepackage[spanish,es-tabla]{babel}
+\usepackage[spanish,es-noshorthands,es-tabla]{babel}
 \usepackage{amsmath,amsfonts,amssymb}
 \usepackage{graphicx}
 \usepackage{cite}
@@ -210,7 +210,7 @@ private:
 El estándar garantiza la inicialización atómica durante el primer flujo de control que alcanza la declaración estática, eliminando primitivas de doble comprobación (\textit{double-checked locking}).
 
 \subsection{Patrón Observer Desacoplado}
-La propagación de novedades cinemáticas (pedidos en camino, entregas completadas, métricas) se ejecuta a través de \texttt{ISubject} e \texttt{IObserver}. Para mitigar fugas de memoria y dependencias cíclicas, la colección de suscriptores se almacena como \texttt{std::vector<std::weak\_ptr<IObserver>>}. Cada ciclo de notificación purga automáticamente los punteros expirados y transfiere el evento fuera del cerrojo de exclusión mutua para impedir bloqueos en cadena.
+La propagación de novedades cinemáticas (pedidos en camino, entregas completadas, métricas) se ejecuta a través de \texttt{ISubject} e \texttt{IObserver}. Para mitigar fugas de memoria y dependencias cíclicas, la colección de suscriptores se almacena como \lstinline|std::vector<std::weak_ptr<IObserver>>|. Cada ciclo de notificación purga automáticamente los punteros expirados y transfiere el evento fuera del cerrojo de exclusión mutua para impedir bloqueos en cadena.
 
 \section{Programación Genérica y Gestión de Memoria (STL \& RAII)}
 
